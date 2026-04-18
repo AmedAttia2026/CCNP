@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>بوابة الطلاب | DR. Mohamed Selem</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        :root { --gold: #FFB300; --bg-body: #0a0e17; --card-bg: #161b26; --text-muted: #9CA3AF; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Cairo', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background-color: var(--bg-body); color: #fff; overflow-x: hidden; display: flex; flex-direction: column; min-height: 100vh;}
+
+        /* --- Custom Beautiful Scrollbar --- */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-body); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 179, 0, 0.3); border-radius: 10px; transition: 0.3s; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--gold); }
+
+        .navbar { background: rgba(10, 14, 23, 0.95); backdrop-filter: blur(10px); height: 70px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; border-bottom: 1px solid rgba(255,179,0,0.2); }
+        .logo { font-size: 20px; font-weight: 900; color: var(--gold); }
+        .btn-track { background: transparent; border: 1px solid var(--gold); color: var(--gold); padding: 8px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .btn-track:hover { background: var(--gold); color: #000; }
+
+        .container { padding: 40px 20px; max-width: 1200px; margin: auto; text-align: center; flex: 1; width: 100%;}
+        .grid-layout { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 25px; margin-top: 40px;}
+        
+        .subject-card { background: linear-gradient(145deg, #161b26, #0d1117); border-radius: 20px; padding: 30px; border: 1px solid rgba(255,179,0,0.2); cursor: pointer; transition: 0.3s; box-shadow: 0 5px 15px rgba(0,0,0,0.5);}
+        .subject-card:hover { transform: translateY(-10px); border-color: var(--gold); box-shadow: 0 10px 30px rgba(255,179,0,0.2); }
+        .subject-card img { width: 120px; height: 120px; object-fit: contain; margin-bottom: 20px; filter: drop-shadow(0 5px 10px rgba(255,179,0,0.3));}
+
+        footer { text-align: center; padding: 30px 20px; background: #0a0e17; border-top: 1px solid rgba(255,255,255,0.05); margin-top: auto;}
+
+        /* --- Fixed Wizard Screen --- */
+        .wizard-screen { position: fixed; inset: 0; background: rgba(10, 14, 23, 0.98); z-index: 10000; display: none; flex-direction: column; }
+        .wizard-header { padding: 20px; background: var(--card-bg); border-bottom: 1px solid rgba(255,179,0,0.3); display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.5); z-index: 2;}
+        .wizard-close { background: none; border: none; color: #EF4444; font-size: 24px; cursor: pointer; transition: 0.3s; }
+        .wizard-close:hover { transform: scale(1.1); }
+        
+        /* The Magic Fix for Scrolling */
+        .wizard-body { flex: 1; overflow-y: auto; display: flex; flex-direction: column; padding: 20px; }
+        .wizard-card { margin: auto; background: var(--card-bg); width: 100%; max-width: 500px; padding: 30px; border-radius: 20px; border: 1px solid rgba(255,179,0,0.3); box-shadow: 0 10px 40px rgba(0,0,0,0.8); position: relative; }
+        
+        .wizard-step { display: none; animation: fadeInRight 0.4s ease-out; }
+        .wizard-step.active { display: block; }
+        @keyframes fadeInRight { from { opacity: 0; transform: translateX(30px); } to { opacity: 1; transform: translateX(0); } }
+
+        .input-dark { width: 100%; padding: 15px; border-radius: 12px; border: 1px solid #4a5568; background: #0d1117; color: #fff; font-size: 15px; outline: none; transition: 0.3s; margin-bottom: 20px;}
+        .input-dark:focus { border-color: var(--gold); box-shadow: 0 0 10px rgba(255,179,0,0.2); }
+        
+        .hint-box { background: rgba(16, 185, 129, 0.1); border: 1px dashed #10B981; padding: 15px; border-radius: 12px; margin-bottom: 20px; text-align: center; }
+        
+        .radio-group { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; text-align: right; }
+        .radio-label { background: #0d1117; border: 1px solid #4a5568; padding: 15px; border-radius: 12px; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: 0.3s; }
+        .radio-label:hover { border-color: var(--gold); }
+        .radio-label input[type="radio"] { accent-color: var(--gold); transform: scale(1.2); }
+        
+        .wizard-btns { display: flex; gap: 15px; margin-top: 10px; }
+        .btn-primary { background: linear-gradient(90deg, #FFB300, #FFD54F); color: #000; border: none; flex: 1; padding: 15px; border-radius: 12px; font-size: 16px; font-weight: 900; cursor: pointer; transition: 0.3s; }
+        .btn-secondary { background: transparent; color: #fff; border: 1px solid #4a5568; padding: 15px 25px; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .btn-primary:hover { filter: brightness(1.1); } .btn-secondary:hover { background: #4a5568; }
+
+        .char-counter { text-align: left; font-size: 12px; color: var(--text-muted); margin-top: -15px; margin-bottom: 20px; font-family: monospace;}
+        .tracking-code { background: #000; padding: 20px; border-radius: 15px; border: 2px dashed var(--gold); color: var(--gold); font-size: 32px; font-family: monospace; font-weight: 900; letter-spacing: 5px; margin: 20px 0; display: inline-block;}
+        
+        .swal2-popup { border-radius: 20px !important; background: #1a1f2c !important; color: #fff !important; }
+        .swal2-input { background: #0d1117 !important; color: #fff !important; border: 1px solid #4a5568 !important; text-align: center;}
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="logo"><i class="fas fa-university"></i> نظام اللجان</div>
+        <button class="btn-track" onclick="openTrackModal()"><i class="fas fa-search"></i> تتبع شكوى</button>
+    </nav>
+
+    <div class="container">
+        <h1 style="font-size:32px; font-weight:900; margin-bottom:10px;">المقررات الدراسية</h1>
+        <p style="color:var(--text-muted); font-size:18px;">اختر المادة لمعرفة لجنتك الامتحانية أو تقديم شكوى</p>
+        <div class="grid-layout" id="subjects-container"></div>
+    </div>
+
+    <footer>
+        <h2 style="color: var(--gold); font-weight: 900; font-size: 24px;">DR. Mohamed Selem</h2>
+        <p style="color: var(--text-muted); font-size: 14px;">تحت إشراف نخبة من المعيدين الأكفاء</p>
+    </footer>
+
+    <div id="wizard-screen" class="wizard-screen">
+        <div class="wizard-header">
+            <h2 style="color:var(--gold); font-size:18px;"><i class="fas fa-exclamation-circle"></i> مركز تسجيل الشكاوى</h2>
+            <button class="wizard-close" onclick="closeWizard()"><i class="fas fa-times"></i></button>
+        </div>
+        
+        <div class="wizard-body">
+            <div class="wizard-card">
+                <div id="step-1" class="wizard-step active">
+                    <h2 id="wiz-dynamic-title" style="color:var(--gold); text-align:center; margin-bottom:20px; font-weight:900;"></h2>
+                    <input type="text" id="wiz-name" class="input-dark" placeholder="الاسم الرباعي كاملاً">
+                    
+                    <div class="hint-box">
+                        <p style="color:#10B981; font-size:14px; margin-bottom:5px;">تلميح: اللجنة المسجلة لك بالنظام هي:</p>
+                        <h3 id="wiz-assigned-com" style="color:#fff; font-weight:900; font-size: 22px;">-</h3>
+                    </div>
+
+                    <div class="radio-group">
+                        <label class="radio-label" onclick="toggleLocationInput(false)">
+                            <input type="radio" name="loc" checked> نعم، أديت الامتحان في هذه اللجنة
+                        </label>
+                        <label class="radio-label" onclick="toggleLocationInput(true)">
+                            <input type="radio" name="loc"> لا، امتحنت في مكان آخر
+                        </label>
+                    </div>
+
+                    <input type="text" id="wiz-actual-com" class="input-dark" placeholder="برجاء كتابة المكان الفعلي لمراجعة حلك..." style="display:none; border-color:#EF4444;">
+                    <div class="wizard-btns"><button class="btn-primary" onclick="goToStep2()">التالي <i class="fas fa-arrow-left"></i></button></div>
+                </div>
+
+                <div id="step-2" class="wizard-step">
+                    <h2 style="color:#fff; text-align:center; margin-bottom:20px;">تفاصيل الشكوى</h2>
+                    <p style="text-align:right; color:var(--gold); font-size:14px; margin-bottom:10px;">المادة: <span id="wiz-sub-name" style="color:#fff;"></span></p>
+                    <p style="text-align:right; color:var(--text-muted); font-size:13px; margin-bottom:10px;">اكتب مشكلتك باختصار (بحد أقصى 100 حرف):</p>
+                    
+                    <textarea id="wiz-prob" class="input-dark" style="height:120px; resize:none;" maxlength="100" oninput="updateCharCount()" placeholder="مثال: لم أجد درجاتي مسجلة في الميدتيرم..."></textarea>
+                    <div class="char-counter" id="char-count">0 / 100</div>
+
+                    <div class="wizard-btns">
+                        <button class="btn-secondary" onclick="goToStep1()"><i class="fas fa-arrow-right"></i> رجوع</button>
+                        <button class="btn-primary" onclick="submitWizard()">إرسال الشكوى <i class="fas fa-paper-plane"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentSubId, currentSubName, currentStudentID, currentAssignedCom;
+
+        window.onload = async () => {
+            const res = await fetch('/api/get-subjects');
+            const data = await res.json();
+            document.getElementById('subjects-container').innerHTML = data.subjects.map(sub => `
+                <div class="subject-card" onclick="askForID('${sub.id}', '${sub.name}')">
+                    <img src="${sub.image}">
+                    <h2 style="font-size:22px; font-weight:900; color:var(--gold);">${sub.name}</h2>
+                </div>
+            `).join('');
+        };
+
+        async function askForID(subId, subName) {
+            const { value: studentID } = await Swal.fire({
+                title: `<span style="color:var(--gold);">${subName}</span>`, text: 'أدخل رقم الـ ID الخاص بك (7 أرقام)', input: 'number', inputPlaceholder: '2220556', confirmButtonText: 'بحث <i class="fas fa-search"></i>', confirmButtonColor: '#FFB300'
+            });
+
+            if (studentID) {
+                Swal.fire({title: 'جاري البحث...', didOpen: () => Swal.showLoading()});
+                const res = await fetch('/api/check-id', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({subject_id: subId, student_id: studentID}) });
+                const data = await res.json();
+
+                if (data.status === 'success') {
+                    Swal.fire({
+                        html: `<i class="fas fa-check-circle fa-4x" style="color:#10B981; margin-bottom:15px;"></i><h2 style="color:var(--gold);">${subName}</h2><div style="background:rgba(16, 185, 129, 0.1); padding:20px; border-radius:15px; border:1px solid #10B981; margin:20px 0;"><p style="color:#10B981; font-size:14px; margin-bottom:5px;">لجنتك هي:</p><h2 style="color:#fff; font-weight:900; font-size:24px;">${data.committee_name}</h2></div>`,
+                        showDenyButton: true, confirmButtonColor: '#FFB300', confirmButtonText: 'حسناً، شكراً', denyButtonColor: '#EF4444', denyButtonText: 'لدي مشكلة (شكوى)'
+                    }).then((result) => {
+                        if (result.isDenied) openWizard(subId, subName, studentID, data.committee_name);
+                    });
+                } else {
+                    Swal.fire({icon: 'error', title: 'غير مدرج', text: data.message, confirmButtonColor: '#EF4444'});
+                }
+            }
+        }
+
+        // --- Wizard Logic ---
+        function openWizard(subId, subName, stuId, comName) {
+            currentSubId = subId; currentSubName = subName; currentStudentID = stuId; currentAssignedCom = comName;
+            
+            // تغيير العنوان ليكون اسم المادة بدلاً من "البيانات الأساسية"
+            document.getElementById('wiz-dynamic-title').innerText = 'مادة: ' + subName;
+            
+            document.getElementById('wiz-assigned-com').innerText = comName; document.getElementById('wiz-sub-name').innerText = subName;
+            document.getElementById('wiz-name').value = ''; document.getElementById('wiz-actual-com').value = ''; document.getElementById('wiz-prob').value = '';
+            updateCharCount(); document.querySelectorAll('input[name="loc"]')[0].checked = true; toggleLocationInput(false);
+            document.getElementById('wizard-screen').style.display = 'flex'; goToStep1();
+        }
+        function closeWizard() { document.getElementById('wizard-screen').style.display = 'none'; }
+        function toggleLocationInput(show) { document.getElementById('wiz-actual-com').style.display = show ? 'block' : 'none'; }
+        function goToStep1() { document.getElementById('step-2').classList.remove('active'); document.getElementById('step-1').classList.add('active'); }
+        function goToStep2() {
+            const name = document.getElementById('wiz-name').value;
+            const isOther = document.querySelectorAll('input[name="loc"]')[1].checked;
+            const actualLoc = document.getElementById('wiz-actual-com').value;
+            if(!name) return Swal.fire({icon: 'warning', text: 'يرجى كتابة اسمك الرباعي', background:'#1a1f2c', color:'#fff'});
+            if(isOther && !actualLoc) return Swal.fire({icon: 'warning', text: 'يرجى كتابة المكان الفعلي', background:'#1a1f2c', color:'#fff'});
+            document.getElementById('step-1').classList.remove('active'); document.getElementById('step-2').classList.add('active');
+        }
+        function updateCharCount() {
+            const len = document.getElementById('wiz-prob').value.length;
+            document.getElementById('char-count').innerText = `${len} / 100`;
+            document.getElementById('char-count').style.color = len >= 100 ? '#EF4444' : '#9CA3AF';
+        }
+        async function submitWizard() {
+            const name = document.getElementById('wiz-name').value, prob = document.getElementById('wiz-prob').value;
+            const actualCom = document.querySelectorAll('input[name="loc"]')[1].checked ? document.getElementById('wiz-actual-com').value : currentAssignedCom;
+            if(!prob) return Swal.fire({icon: 'warning', text: 'يرجى كتابة الشكوى', background:'#1a1f2c', color:'#fff'});
+
+            Swal.fire({title: 'جاري الإرسال...', background:'#1a1f2c', color:'#fff', didOpen: () => Swal.showLoading()});
+            const res = await fetch('/api/submit-complaint', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ subject_id: currentSubId, subject_name: currentSubName, student_id: currentStudentID, student_name: name, assigned_committee: currentAssignedCom, actual_committee: actualCom, problem: prob }) });
+            const data = await res.json();
+            if(data.status === 'success') {
+                closeWizard();
+                Swal.fire({ html: `<i class="fas fa-shield-check fa-4x" style="color:var(--gold); margin-bottom:15px;"></i><h2 style="color:#fff;">تم استلام شكواك</h2><div class="tracking-code">${data.tracking_id}</div><p style="color:#EF4444; font-size:14px;">احتفظ بهذا الكود وتأكد من نسخه لتتبع رد الإدارة.</p>`, background: '#1a1f2c', confirmButtonColor: '#FFB300', confirmButtonText: 'تم النسخ' });
+            }
+        }
+
+        async function openTrackModal() {
+            const { value: trackId } = await Swal.fire({ title: 'تتبع الشكوى', input: 'text', inputPlaceholder: 'اكتب كود التتبع...', background: '#1a1f2c', color: '#fff', confirmButtonText: 'استعلام', confirmButtonColor: '#FFB300' });
+            if (trackId) {
+                Swal.fire({title: 'جاري البحث...', background:'#1a1f2c', color:'#fff', didOpen: () => Swal.showLoading()});
+                const res = await fetch('/api/track-complaint', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({tracking_id: trackId}) });
+                const data = await res.json();
+
+                if (data.status === 'success') {
+                    const c = data.complaint;
+                    let statusHtml = '';
+                    if(c.status === 'resolved') {
+                        statusHtml = `<div style="background:rgba(16,185,129,0.1); border:1px solid #10B981; padding:15px; border-radius:10px; margin-top:20px; text-align:right;"><p style="color:#10B981; font-weight:bold;"><i class="fas fa-check-double"></i> رد الإدارة (${c.replied_by}):</p><p style="color:#fff;">${c.admin_reply}</p></div>`;
+                    } else if(c.status === 'spam') {
+                        statusHtml = `<div style="background:rgba(239,68,68,0.1); border:1px dashed #EF4444; padding:15px; border-radius:10px; margin-top:20px; color:#EF4444;"><i class="fas fa-ban"></i> عذراً، تم رفض هذه الشكوى لعدم الجدية أو لمحتوى غير لائق.</div>`;
+                    } else {
+                        statusHtml = `<div style="background:rgba(255,179,0,0.1); border:1px dashed var(--gold); padding:15px; border-radius:10px; margin-top:20px; color:var(--gold);"><i class="fas fa-clock"></i> قيد المراجعة لدى الإدارة.</div>`;
+                    }
+
+                    Swal.fire({ title: `الشكوى: ${c.subject_name}`, html: `<div style="text-align:right; font-size:14px; color:#E5E7EB;"><p><strong style="color:var(--text-muted);">الشكوى:</strong> ${c.problem}</p></div>${statusHtml}`, background: '#1a1f2c', color: '#fff', confirmButtonColor: '#FFB300' });
+                } else {
+                    Swal.fire({icon: 'error', title: 'خطأ', text: data.message, background: '#1a1f2c', color: '#fff'});
+                }
+            }
+        }
+    </script>
+</body>
+</html>

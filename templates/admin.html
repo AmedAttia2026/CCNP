@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>إدارة الامتحانات | Control Panel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <style>
+        :root { --gold: #FFB300; --bg-main: #060913; --bg-card: #1F2937; --text-muted: #9CA3AF; --border: #374151; --sidebar-width: 250px; }
+        
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-main); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 179, 0, 0.3); border-radius: 10px; transition: background 0.3s;}
+        ::-webkit-scrollbar-thumb:hover { background: var(--gold); }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Cairo', sans-serif; -webkit-tap-highlight-color: transparent;}
+        body { background: var(--bg-main); color: #fff; display: flex; overflow-x: hidden;}
+
+        #login-screen { position: fixed; inset: 0; z-index: 10000; background: #060913; display: flex; justify-content: center; align-items: center; padding: 20px;}
+        .login-card { background: var(--bg-card); padding: 40px; border-radius: 20px; border: 1px solid var(--border); text-align: center; width: 100%; max-width: 400px; box-shadow: 0 0 40px rgba(0,0,0,0.8);}
+        .login-input { width: 100%; padding: 15px; margin-bottom: 20px; border-radius: 12px; border: 1px solid var(--border); background: #000; color: #fff; font-size: 15px; outline: none; transition: 0.3s;}
+        .login-input:focus { border-color: var(--gold); }
+        
+        #main-app { display: none; width: 100%; position: relative;}
+        
+        /* Mobile Overlay */
+        .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 999; backdrop-filter: blur(3px); }
+
+        .sidebar { width: var(--sidebar-width); background: var(--bg-card); height: 100vh; position: fixed; right: 0; top: 0; border-left: 1px solid var(--border); padding: 25px 0; overflow-y: auto; z-index: 1000; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);}
+        .logo { text-align: center; font-size: 18px; font-weight: 900; color: var(--gold); margin-bottom: 30px; letter-spacing: 1px;}
+        .nav-links { list-style: none; padding: 0 10px; }
+        .nav-links > li { color: var(--text-muted); font-weight: 700; padding: 10px 15px; font-size: 13px; border-radius: 8px; cursor: pointer; margin-bottom: 4px; display: flex; gap: 12px; align-items: center; transition: 0.3s;}
+        .nav-links > li i.icon-main { font-size: 15px; width: 20px; text-align: center;} 
+        .nav-links > li.active, .nav-links > li:hover { background: rgba(255, 179, 0, 0.1); color: var(--gold); }
+        
+        .sub-links { list-style: none; padding-right: 30px; display: none; margin-bottom: 10px;}
+        .sub-links.open { display: block; animation: fadeIn 0.3s; }
+        .sub-links li { padding: 8px 10px; font-size: 12px; font-weight: bold; color: #9CA3AF; cursor: pointer; border-radius: 6px; margin-bottom: 3px; position: relative;}
+        .sub-links li::before { content: "▪"; position: absolute; right: -10px; color: var(--text-muted); transition: 0.3s;}
+        .sub-links li.active, .sub-links li:hover { background: rgba(255, 179, 0, 0.15); color: var(--gold); }
+        .sub-links li.active::before { color: var(--gold); }
+
+        .chevron { margin-right: auto; font-size: 10px; transition: transform 0.3s; }
+        .open-menu .chevron { transform: rotate(180deg); color: var(--gold);}
+
+        .wipe-btn-li { border: 1px dashed rgba(239, 68, 68, 0.4); color: #EF4444 !important; margin-top: 20px; }
+        .wipe-btn-li:hover { background: rgba(239, 68, 68, 0.1) !important; color: #EF4444 !important; border-color: #EF4444;}
+
+        .main-content { margin-right: var(--sidebar-width); width: calc(100% - var(--sidebar-width)); padding: 25px 30px; transition: 0.3s; }
+        .content-section { display: none; } .content-section.active { display: block; animation: fadeIn 0.4s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Mobile Header */
+        .mobile-header { display: none; background: var(--bg-card); padding: 15px 20px; border-radius: 15px; margin-bottom: 20px; border: 1px solid var(--border); justify-content: space-between; align-items: center; box-shadow: 0 5px 15px rgba(0,0,0,0.3);}
+        .menu-toggle { background: transparent; border: none; color: var(--gold); font-size: 24px; cursor: pointer; padding: 0 10px;}
+
+        /* Committee Filters */
+        .committee-filters { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 15px; border-bottom: 1px solid var(--border);}
+        .com-btn { background: var(--bg-card); border: 1px solid var(--border); color: var(--text-muted); padding: 8px 15px; border-radius: 20px; font-size: 13px; font-weight: bold; cursor: pointer; transition: 0.3s; white-space: nowrap;}
+        .com-btn:hover { border-color: var(--gold); color: #fff; }
+        .com-btn.active { background: rgba(16, 185, 129, 0.1); border-color: #10B981; color: #10B981; }
+
+        /* Tables */
+        .table-container { background: var(--bg-card); padding: 15px; border-radius: 15px; border: 1px solid var(--border); overflow-x: auto; margin-top: 10px;}
+        table { width: 100%; border-collapse: collapse; min-width: 850px;}
+        table th { padding: 12px; text-align: center; border-bottom: 2px solid var(--border); color: var(--text-muted); background: rgba(0,0,0,0.2); font-size: 13px;}
+        table td { padding: 12px; text-align: center; border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: middle;}
+        
+        .text-wrap-bold { text-align: right; max-width: 280px; white-space: normal; word-wrap: break-word; font-weight: 800; color: #ffffff; line-height: 1.6; font-size: 14px; padding: 15px !important; }
+        .reply-wrap-bold { text-align: right; max-width: 250px; white-space: normal; word-wrap: break-word; font-weight: 900; color: #10B981; line-height: 1.6; font-size: 14px; padding: 15px !important; }
+
+        .btn { padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; border: none; color: #fff; display: inline-flex; gap: 5px; align-items: center; font-size:12px; transition:0.3s; white-space: nowrap;}
+        .btn-gold { background: var(--gold); color: #000; } .btn-green { background: #10B981; } .btn-red { background: rgba(239, 68, 68, 0.2); color: #EF4444; border: 1px solid #EF4444;} .btn-blue { background: rgba(59, 130, 246, 0.2); color:#3B82F6; border: 1px solid #3B82F6;} .btn-gray { background: rgba(156, 163, 175, 0.2); color:#9CA3AF; border: 1px solid #9CA3AF;}
+        .btn:hover { filter: brightness(1.3); }
+        
+        .track-id { font-family: monospace; color: var(--gold); background: #000; padding: 4px 8px; border-radius: 6px; font-weight: bold;}
+        
+        .swal2-popup { border-radius: 20px !important; background: #1a1f2c !important; color: #fff !important; }
+        .swal2-textarea, .swal2-input { background: #0d1117 !important; color: #fff !important; border: 1px solid #4a5568 !important; text-align: right; font-size: 15px !important; font-weight:bold;}
+        .swal2-input:focus, .swal2-textarea:focus { border-color: var(--gold) !important; box-shadow: none !important;}
+
+        /* --- Mobile/Tablet Responsive Rules (Updated to 1024px) --- */
+        @media (max-width: 1024px) {
+            .sidebar { transform: translateX(100%); box-shadow: -5px 0 25px rgba(0,0,0,0.6); }
+            .sidebar.open { transform: translateX(0); }
+            .main-content { margin-right: 0; width: 100%; padding: 15px; }
+            .mobile-header { display: flex; }
+            .welcome-container { display: none; }
+            .table-container { padding: 10px; border-radius: 10px; }
+            table th, table td { padding: 10px 8px; }
+            .btn { padding: 6px 10px; font-size: 11px; }
+            .text-wrap-bold, .reply-wrap-bold { font-size: 12px; padding: 10px !important;}
+        }
+    </style>
+</head>
+<body>
+
+    <div id="login-screen">
+        <div class="login-card">
+            <i class="fas fa-shield-alt fa-3x" style="color:var(--gold); margin-bottom:20px;"></i>
+            <h2 style="color:#fff; margin-bottom:30px; font-size:22px;">لوحة الإدارة والتوجيه</h2>
+            <input type="text" id="user" class="login-input" placeholder="اسم المستخدم">
+            <input type="password" id="pass" class="login-input" placeholder="كلمة المرور">
+            <button class="btn btn-gold" style="width:100%; justify-content:center; font-size:16px; padding:12px;" onclick="handleLogin()">دخول للنظام</button>
+        </div>
+    </div>
+
+    <div id="main-app">
+        <div id="mobile-overlay" class="overlay" onclick="toggleSidebar()"></div>
+
+        <aside class="sidebar">
+            <div class="logo"><i class="fas fa-crown"></i> Control Panel</div>
+            <ul class="nav-links">
+                <li onclick="switchTab('subjects', this)"><i class="fas fa-book icon-main"></i> إدارة المواد</li>
+                
+                <li id="tab-committees" onclick="toggleSubMenu('committees', this)">
+                    <i class="fas fa-layer-group icon-main"></i> اللجان وقوائم الطلاب <i class="fas fa-chevron-down chevron"></i>
+                </li>
+                <ul id="menu-committees" class="sub-links"></ul>
+                
+                <hr style="border:0; border-top:1px solid var(--border); margin:15px 10px;">
+                
+                <li id="tab-pending" onclick="toggleSubMenu('pending', this)"><i class="fas fa-inbox icon-main" style="color:var(--gold);"></i> شكاوى جديدة <i class="fas fa-chevron-down chevron"></i></li>
+                <ul id="menu-pending" class="sub-links"></ul>
+
+                <li id="tab-resolved" onclick="toggleSubMenu('resolved', this)"><i class="fas fa-check-double icon-main" style="color:#10B981;"></i> تم الرد عليها <i class="fas fa-chevron-down chevron"></i></li>
+                <ul id="menu-resolved" class="sub-links"></ul>
+
+                <li id="tab-spam" onclick="toggleSubMenu('spam', this)"><i class="fas fa-ban icon-main" style="color:#EF4444;"></i> مرفوضة (مسيئة) <i class="fas fa-chevron-down chevron"></i></li>
+                <ul id="menu-spam" class="sub-links"></ul>
+                
+                <hr style="border:0; border-top:1px solid var(--border); margin:15px 10px;">
+
+                <li class="admin-only" onclick="toggleSystem()" id="toggle-sys-btn" style="transition:0.3s; margin-bottom:5px;"></li>
+
+                <li onclick="switchTab('staff', this)" class="admin-only"><i class="fas fa-users-cog icon-main"></i> المعيدين والصلاحيات</li>
+
+                <li class="wipe-btn-li admin-only" onclick="wipeDatabase()"><i class="fas fa-dumpster-fire icon-main"></i> مسح الداتابيز بالكامل</li>
+                <li style="color:#EF4444; margin-top:5px;" onclick="location.href='/logout-gateway-vip-x9v2-pL7q-2026'"><i class="fas fa-power-off icon-main"></i> تسجيل خروج</li>
+            </ul>
+        </aside>
+
+        <main class="main-content">
+            <div class="mobile-header">
+                <div class="logo" style="margin-bottom:0; font-size:18px;"><i class="fas fa-crown"></i> لوحة الإدارة</div>
+                <button class="menu-toggle" onclick="toggleSidebar()"><i class="fas fa-ellipsis-v"></i></button>
+            </div>
+
+            <div class="welcome-container" style="margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 10px;">
+                <h2 id="welcome-text" style="color:var(--gold); font-size: 20px;">مرحباً..</h2>
+            </div>
+
+            <div id="subjects" class="content-section">
+                <button class="btn btn-green admin-only" onclick="addSubject()"><i class="fas fa-plus"></i> إضافة مادة جديدة</button>
+                <div class="table-container">
+                    <table>
+                        <thead><tr><th>الصورة</th><th>المادة</th><th>بواسطة</th><th>إجراء</th></tr></thead>
+                        <tbody id="subjects-list"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="committees" class="content-section">
+                <h3 id="committees-title" style="color:var(--gold); margin-bottom:10px; font-size:16px;"><i class="fas fa-layer-group"></i> قوائم اللجان</h3>
+                <button class="btn btn-gold" onclick="addCommittee()"><i class="fas fa-paste"></i> لصق وإنشاء لجنة طلاب</button>
+                <div class="table-container">
+                    <table>
+                        <thead><tr><th>اللجنة / المدرج</th><th>عدد الطلاب</th><th>بواسطة</th><th>إجراء</th></tr></thead>
+                        <tbody id="committees-list"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="complaints-pending" class="content-section">
+                <h3 id="pending-title" style="color:var(--gold); margin-bottom:10px; font-size:16px;"><i class="fas fa-inbox"></i> الشكاوى الجديدة</h3>
+                <div id="filters-pending" class="committee-filters"></div>
+                <div class="table-container" style="margin-top:0;">
+                    <table>
+                        <thead><tr><th>التتبع</th><th>الطالب / الـ ID</th><th style="font-size:11px;">مكان اللجنة</th><th>الشكوى (المشكلة)</th><th>إجراء</th></tr></thead>
+                        <tbody id="pending-list"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="complaints-resolved" class="content-section">
+                <h3 id="resolved-title" style="color:#10B981; margin-bottom:10px; font-size:16px;"><i class="fas fa-check-double"></i> الشكاوى المجاب عليها</h3>
+                <div id="filters-resolved" class="committee-filters"></div>
+                <div class="table-container" style="margin-top:0;">
+                    <table>
+                        <thead><tr><th>التتبع</th><th>الطالب / الـ ID</th><th style="font-size:11px;">مكان اللجنة</th><th>الشكوى</th><th>رد الإدارة</th><th>المُجيب</th><th>إجراء</th></tr></thead>
+                        <tbody id="resolved-list"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="complaints-spam" class="content-section">
+                <h3 id="spam-title" style="color:#EF4444; margin-bottom:10px; font-size:16px;"><i class="fas fa-ban"></i> الشكاوى المرفوضة</h3>
+                <div id="filters-spam" class="committee-filters"></div>
+                <div class="table-container" style="margin-top:0;">
+                    <table>
+                        <thead><tr><th>التتبع</th><th>الطالب / الـ ID</th><th style="font-size:11px;">مكان اللجنة</th><th>محتوى الشكوى</th><th>إجراء</th></tr></thead>
+                        <tbody id="spam-list"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="staff" class="content-section admin-only">
+                <button class="btn btn-green" onclick="addStaff()"><i class="fas fa-user-plus"></i> إضافة معيد للنظام</button>
+                <div class="table-container">
+                    <table>
+                        <thead><tr><th>اسم المعيد</th><th>اسم الدخول</th><th>المواد المسموحة</th><th>الصفة</th><th>إجراء</th></tr></thead>
+                        <tbody id="staff-list"></tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        let me = null;
+        let globalSubjects = [];
+        let globalCommittees = [];
+        let fullComplaints = [];
+        let systemIsOpen = true;
+        
+        let committeeFilter = JSON.parse(localStorage.getItem('admin_committee_filter')) || { sub: '' };
+
+        let compFilters = JSON.parse(localStorage.getItem('admin_comp_filters')) || {
+            'pending': { sub: '', com: 'all' },
+            'resolved': { sub: '', com: 'all' },
+            'spam': { sub: '', com: 'all' }
+        };
+
+        const swalDark = { background: '#1F2937', color: '#fff', confirmButtonColor: '#FFB300' };
+
+        // دالة فتح وقفل الـ Sidebar في الموبايل
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.getElementById('mobile-overlay');
+            sidebar.classList.toggle('open');
+            overlay.style.display = sidebar.classList.contains('open') ? 'block' : 'none';
+        }
+
+        async function handleLogin() {
+            const res = await fetch('/auth-gateway-vip-x9v2-pL7q-2026', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({username: document.getElementById('user').value, password: document.getElementById('pass').value})});
+            const data = await res.json();
+            if(data.status === 'success') location.reload();
+            else Swal.fire({...swalDark, icon: 'error', text: data.message});
+        }
+
+        async function refreshData() {
+            const res = await fetch('/api/admin-data');
+            const data = await res.json();
+            if(!data.currentAdmin) return;
+
+            me = data.currentAdmin;
+            globalSubjects = data.subjects || [];
+            globalCommittees = data.committees || [];
+            fullComplaints = data.complaints || [];
+            systemIsOpen = data.system_open; 
+            
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('main-app').style.display = 'flex';
+            document.getElementById('welcome-text').innerText = `مرحباً، ${me.name}`;
+
+            if(me.role !== 'super_admin') document.querySelectorAll('.admin-only').forEach(e => e.style.display = 'none');
+
+            if(me.role === 'super_admin') {
+                const sysBtn = document.getElementById('toggle-sys-btn');
+                if(systemIsOpen) {
+                    sysBtn.style.background = 'rgba(239, 68, 68, 0.1)';
+                    sysBtn.style.color = '#EF4444';
+                    sysBtn.style.border = '1px solid #EF4444';
+                    sysBtn.innerHTML = '<i class="fas fa-lock icon-main"></i> إيقاف النظام (إخفاء)';
+                } else {
+                    sysBtn.style.background = 'rgba(16, 185, 129, 0.1)';
+                    sysBtn.style.color = '#10B981';
+                    sysBtn.style.border = '1px solid #10B981';
+                    sysBtn.innerHTML = '<i class="fas fa-eye icon-main"></i> تفعيل النظام للطلاب';
+                }
+            }
+
+            document.getElementById('subjects-list').innerHTML = globalSubjects.map(s => `<tr><td><img src="${s.image}" width="35" style="border-radius:6px;"></td><td style="color:var(--gold); font-weight:bold;">${s.name}</td><td>${s.added_by}</td><td>${me.role === 'super_admin' ? `<button class="btn btn-red" onclick="deleteAction('manage_subject', '${s.id}')"><i class="fas fa-trash"></i> حذف</button>` : '-'}</td></tr>`).join('');
+            
+            if(me.role === 'super_admin') {
+                document.getElementById('staff-list').innerHTML = data.staff.map(s => {
+                    let allowedNames = '-';
+                    if (s.role !== 'super_admin' && s.allowed_subjects) {
+                        allowedNames = s.allowed_subjects.map(subId => {
+                            let fSub = globalSubjects.find(gs => gs.id === subId);
+                            return fSub ? `<span style="background:rgba(255, 179, 0, 0.1); color:var(--gold); padding:2px 6px; border-radius:4px; font-size:11px; margin:2px; display:inline-block;">${fSub.name}</span>` : '';
+                        }).join('');
+                    } else if (s.role === 'super_admin') {
+                        allowedNames = '<span style="color:#10B981;">كل المواد</span>';
+                    }
+
+                    return `
+                        <tr>
+                            <td style="font-weight:bold;">${s.name}</td>
+                            <td style="font-family:monospace; color:var(--text-muted);">${s.username}</td>
+                            <td>${allowedNames || 'بدون صلاحيات'}</td>
+                            <td>${s.role === 'super_admin' ? '<i class="fas fa-crown" style="color:var(--gold)"></i> دكتور المادة' : 'معيد'}</td>
+                            <td>
+                                <div style="display:flex; justify-content:center; gap:5px; flex-direction:column;">
+                                    <button class="btn btn-blue" onclick="changePassword('${s.username}')"><i class="fas fa-key"></i> باسورد</button>
+                                    ${s.role !== 'super_admin' ? `<button class="btn btn-red" onclick="deleteAction('manage_staff', '${s.username}', true)"><i class="fas fa-trash"></i> حذف</button>` : ''}
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');            
+            }
+            
+            if(globalSubjects.length > 0) {
+                if(!committeeFilter.sub) committeeFilter.sub = globalSubjects[0].id;
+                ['pending', 'resolved', 'spam'].forEach(tab => {
+                    if(!compFilters[tab].sub) compFilters[tab].sub = globalSubjects[0].id;
+                });
+                saveAllFilters();
+            }
+
+            buildSidebarMenus();
+            renderCommittees();
+            renderComplaints('pending');
+            renderComplaints('resolved');
+            renderComplaints('spam');
+
+            if(!document.querySelector('.content-section.active') || document.querySelector('.content-section.active').id === 'subjects') {
+                document.getElementById('tab-pending').click();
+            }
+        }
+
+        async function toggleSystem() {
+            const newState = !systemIsOpen;
+            const msg = newState ? 'هل أنت متأكد من تفعيل النظام وفتحه للطلاب مجدداً؟' : 'تأكيد إيقاف النظام؟\nلن يتمكن أي طالب من الدخول وسيظهر لهم خطأ (404 Not Found).';
+            
+            if(confirm(msg)) {
+                if(window.innerWidth <= 1024) toggleSidebar();
+                Swal.fire({title: 'جاري التحديث...', background: '#1a1f2c', color: '#fff', didOpen: () => Swal.showLoading()});
+                await fetch('/api/admin-action', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({action: 'toggle_system', is_open: newState}) });
+                await refreshData();
+                Swal.fire({...swalDark, icon: 'success', title: newState ? 'تم تفعيل النظام' : 'تم إيقاف النظام', timer: 1500, showConfirmButton: false});
+            }
+        }
+
+        async function changePassword(targetUsername) {
+            const { value: newPass } = await Swal.fire({
+                title: `تغيير باسورد (${targetUsername})`,
+                input: 'password',
+                inputPlaceholder: 'أدخل الباسورد الجديد هنا...',
+                background: '#1a1f2c', color: '#fff',
+                confirmButtonColor: '#FFB300',
+                showCancelButton: true,
+                cancelButtonText: 'إلغاء'
+            });
+            if (newPass) {
+                Swal.fire({title: 'جاري التعديل...', background: '#1a1f2c', color: '#fff', didOpen: () => Swal.showLoading()});
+                const res = await fetch('/api/admin-action', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({action: 'change_password', target_user: targetUsername, new_password: newPass}) });
+                const data = await res.json();
+                if (data.status === 'success') {
+                    Swal.fire({...swalDark, icon: 'success', title: 'تم تغيير الباسورد بنجاح!', timer: 1500, showConfirmButton: false});
+                } else {
+                    Swal.fire({...swalDark, icon: 'error', text: data.message});
+                }
+            }
+        }
+
+        function saveAllFilters() {
+            localStorage.setItem('admin_committee_filter', JSON.stringify(committeeFilter));
+            localStorage.setItem('admin_comp_filters', JSON.stringify(compFilters));
+        }
+
+        function toggleSubMenu(tabName, el) {
+            const allTabs = ['committees', 'pending', 'resolved', 'spam'];
+            allTabs.forEach(t => {
+                if(t !== tabName) {
+                    document.getElementById(`menu-${t}`).classList.remove('open');
+                    document.getElementById(`tab-${t}`).classList.remove('open-menu', 'active');
+                }
+            });
+            
+            document.getElementById(`menu-${tabName}`).classList.toggle('open');
+            el.classList.toggle('open-menu');
+            el.classList.add('active');
+
+            document.querySelectorAll('.content-section').forEach(t => t.classList.remove('active'));
+            let contentId = tabName.startsWith('complaints-') ? tabName : `complaints-${tabName}`;
+            if (tabName === 'committees') contentId = 'committees';
+            
+            document.getElementById(contentId).classList.add('active');
+        }
+
+        function buildSidebarMenus() {
+            const tabs = ['committees', 'pending', 'resolved', 'spam'];
+            tabs.forEach(tab => {
+                const menu = document.getElementById(`menu-${tab}`);
+                let html = '';
+                globalSubjects.forEach(s => {
+                    let activeCls = '';
+                    let clickHandler = '';
+                    
+                    if (tab === 'committees') {
+                        activeCls = committeeFilter.sub === s.id ? 'active' : '';
+                        clickHandler = `filterCommitteesBySubject('${s.id}', this)`;
+                    } else {
+                        activeCls = compFilters[tab].sub === s.id ? 'active' : '';
+                        clickHandler = `filterComplaintsBySubject('${s.id}', '${tab}', this)`;
+                    }
+                    html += `<li class="${activeCls}" onclick="${clickHandler}">${s.name}</li>`;
+                });
+                menu.innerHTML = html;
+            });
+        }
+        
+        function filterCommitteesBySubject(subId, el) {
+            committeeFilter.sub = subId;
+            saveAllFilters();
+            
+            document.querySelectorAll('#menu-committees li').forEach(li => li.classList.remove('active'));
+            el.classList.add('active');
+            
+            if(window.innerWidth <= 1024) toggleSidebar();
+            renderCommittees();
+        }
+
+        function renderCommittees() {
+            const activeSub = committeeFilter.sub;
+            const sName = globalSubjects.find(s => s.id === activeSub)?.name || '...';
+            
+            const list = globalCommittees.filter(c => c.subject_id === activeSub);
+            const totalStudents = list.reduce((sum, c) => sum + (c.ids ? c.ids.length : 0), 0);
+            
+            document.getElementById('committees-title').innerHTML = `
+                <i class="fas fa-layer-group"></i> قوائم اللجان - مادة: <span style="color:#fff;">${sName}</span> 
+                <span style="display:inline-block; margin-top:10px; color:var(--gold); border:1px solid var(--gold); background:rgba(255,179,0,0.1); padding:4px 10px; border-radius:12px; font-size:12px; margin-right:5px; font-weight:bold;">
+                    (${list.length} لجان / ${totalStudents} طالب مسجل)
+                </span>
+            `;
+
+            const tbody = document.getElementById('committees-list');
+
+            if (list.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" style="color:var(--text-muted); padding:30px;">لا توجد لجان مضافة لهذه المادة بعد.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = list.map(c => `
+                <tr>
+                    <td style="color:#10B981; font-weight:bold;">${c.committee_name}</td>
+                    <td><span style="background:rgba(16,185,129,0.1); color:#10B981; padding:6px 12px; border-radius:8px;"><span style="font-size:18px; font-weight:900; color:#fff;">${c.ids.length}</span> طالب</span></td>
+                    <td>${c.added_by}</td>
+                    <td><button class="btn btn-red" onclick="deleteAction('manage_committee', '${c.committee_id}')"><i class="fas fa-trash"></i> حذف</button></td>
+                </tr>
+            `).join('');
+        }
+
+        function filterComplaintsBySubject(subId, tabName, el) {
+            compFilters[tabName].sub = subId;
+            compFilters[tabName].com = 'all'; 
+            saveAllFilters();
+            
+            document.querySelectorAll(`#menu-${tabName} li`).forEach(li => li.classList.remove('active'));
+            el.classList.add('active');
+
+            if(window.innerWidth <= 1024) toggleSidebar();
+            renderComplaints(tabName);
+        }
+
+        function filterCommittee(comName, tabName) {
+            compFilters[tabName].com = comName;
+            saveAllFilters();
+            renderComplaints(tabName);
+        }
+
+        function renderComplaints(tabName) {
+            const activeSub = compFilters[tabName].sub;
+            const activeCom = compFilters[tabName].com;
+            
+            // الفلتر المزدوج للبحث في اللجنة المسجلة والفعلية معاً
+            let list = fullComplaints.filter(c => c.status === tabName);
+            if(activeSub) list = list.filter(c => c.subject_id === activeSub);
+            if(activeCom !== 'all') list = list.filter(c => c.assigned_committee === activeCom || (c.actual_committee && c.actual_committee === activeCom));
+
+            const sName = globalSubjects.find(s => s.id === activeSub)?.name || '';
+            const titles = { 'pending': 'الشكاوى الجديدة', 'resolved': 'الشكاوى التي تم حلها', 'spam': 'الشكاوى المرفوضة' };
+            const icons = { 'pending': 'fa-inbox', 'resolved': 'fa-check-double', 'spam': 'fa-ban' };
+            
+            const badgeColors = {
+                'pending': 'color:var(--gold); border:1px solid var(--gold); background:rgba(255,179,0,0.1);',
+                'resolved': 'color:#10B981; border:1px solid #10B981; background:rgba(16,185,129,0.1);',
+                'spam': 'color:#EF4444; border:1px solid #EF4444; background:rgba(239,68,68,0.1);'
+            };
+            const bStyle = badgeColors[tabName];
+
+            document.getElementById(`${tabName}-title`).innerHTML = `
+                <i class="fas ${icons[tabName]}"></i> ${titles[tabName]} - مادة: <span style="color:#fff;">${sName}</span> 
+                <span style="${bStyle} display:inline-block; margin-top:10px; padding:4px 10px; border-radius:12px; font-size:12px; margin-right:5px; font-weight:bold;">
+                    العدد المعروض: ${list.length} طالب
+                </span>
+            `;
+
+            let relevantCommittees = globalCommittees.filter(c => c.subject_id === activeSub);
+            const uniqueComNames = [...new Set(relevantCommittees.map(c => c.committee_name))];
+            
+            let btnHtml = `<button class="com-btn ${activeCom === 'all' ? 'active' : ''}" onclick="filterCommittee('all', '${tabName}')">كل اللجان</button>`;
+            uniqueComNames.forEach(name => {
+                btnHtml += `<button class="com-btn ${activeCom === name ? 'active' : ''}" onclick="filterCommittee('${name}', '${tabName}')">${name}</button>`;
+            });
+            document.getElementById(`filters-${tabName}`).innerHTML = btnHtml;
+
+            const tbody = document.getElementById(`${tabName}-list`);
+            if (list.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="10" style="color:var(--text-muted); padding:30px;">لا توجد بيانات معروضة في هذا التصنيف.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = list.map(c => {
+                const isChanged = c.assigned_committee !== c.actual_committee && c.actual_committee && c.actual_committee.trim() !== '';
+                
+                // تصميم جديد بارز لمكان اللجنة
+                const locs = isChanged 
+                    ? `<div style="background:rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); padding: 8px; border-radius: 8px; font-size: 13px; line-height: 1.6; text-align: right; min-width: 120px; display:inline-block;">
+                         <span style="color:var(--text-muted)">المُسجل:</span> <strike style="color:#9CA3AF; font-size:14px; font-weight:bold;">${c.assigned_committee}</strike><br>
+                         <span style="color:#EF4444">الفعلي:</span> <b style="color:#fff; font-size:16px;">${c.actual_committee}</b>
+                       </div>`
+                    : `<div style="background:rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); padding: 8px; border-radius: 8px; font-size: 14px; color:#10B981; font-weight:bold; min-width: 100px; display:inline-block;">
+                         ${c.assigned_committee}
+                       </div>`;
+                       
+                const studentInfo = `<td><b style="font-size:14px;">${c.student_name}</b><br><span style="color:var(--gold); font-family:monospace; font-size:13px;">${c.student_id}</span></td>`;
+                if(tabName === 'pending') {
+                    return `<tr><td><span class="track-id">${c.tracking_id}</span></td>${studentInfo}<td>${locs}</td><td class="text-wrap-bold">${c.problem}</td><td><div style="display:flex; justify-content:center; gap:5px; flex-direction:column;"><button class="btn btn-blue" onclick="replyComplaint('${c.tracking_id}', '${c.student_name}')"><i class="fas fa-reply"></i> رد وحل</button><button class="btn btn-gray" onclick="updateComplaintStatus('${c.tracking_id}', 'mark_spam')"><i class="fas fa-ban"></i> أسئ</button></div></td></tr>`;
+                } else if (tabName === 'resolved') {
+                    return `<tr><td><span class="track-id">${c.tracking_id}</span></td>${studentInfo}<td>${locs}</td><td class="text-wrap-bold" style="color:#9CA3AF; font-size:12px;">${c.problem}</td><td class="reply-wrap-bold">${c.admin_reply}</td><td style="font-size:12px; color:var(--gold); font-weight:bold;">${c.replied_by}</td><td><button class="btn btn-gold" onclick="editReply('${c.tracking_id}', '${c.student_name}')"><i class="fas fa-edit"></i> تعديل</button></td></tr>`;
+                } else if (tabName === 'spam') {
+                    return `<tr><td><span class="track-id" style="color:#EF4444; border:1px solid rgba(239,68,68,0.3);">${c.tracking_id}</span></td>${studentInfo}<td>${locs}</td><td class="text-wrap-bold" style="color:#9CA3AF;">${c.problem}</td><td><div style="display:flex; justify-content:center; gap:5px; flex-direction:column;"><button class="btn btn-blue" onclick="updateComplaintStatus('${c.tracking_id}', 'restore_complaint')"><i class="fas fa-undo"></i> استرجاع</button><button class="btn btn-red" onclick="updateComplaintStatus('${c.tracking_id}', 'delete_complaint')"><i class="fas fa-trash"></i> حذف نهائي</button></div></td></tr>`;
+                }
+            }).join('');
+        }
+        
+        function switchTab(id, el) {
+            const allDropdownTabs = ['committees', 'pending', 'resolved', 'spam'];
+            allDropdownTabs.forEach(t => {
+                document.getElementById(`menu-${t}`).classList.remove('open');
+                document.getElementById(`tab-${t}`).classList.remove('open-menu', 'active');
+            });
+            document.querySelectorAll('.content-section').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.nav-links > li').forEach(l => l.classList.remove('active'));
+            
+            document.getElementById(id).classList.add('active');
+            if(el) el.classList.add('active');
+            
+            if(window.innerWidth <= 1024) toggleSidebar();
+        }
+
+        async function deleteAction(action, id, isStaff = false) {
+            if(confirm('تأكيد الحذف النهائي؟')) {
+                await fetch('/api/admin-action', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(isStaff ? {action, sub: 'delete', username: id} : {action, sub: 'delete', id}) });
+                await refreshData();
+            }
+        }
+
+        async function replyComplaint(tracking_id, student_name, existing_reply = '') {
+            const { value: replyText } = await Swal.fire({ title: `رد على شكوى (${student_name})`, inputValue: existing_reply, input: 'textarea', inputPlaceholder: 'اكتب رسالتك للطالب هنا...', confirmButtonText: 'إرسال الرد <i class="fas fa-paper-plane"></i>', showCancelButton: true, cancelButtonText: 'إلغاء', confirmButtonColor: '#10B981', background: '#1a1f2c', color: '#fff', inputValidator: (val) => { if (!val.trim()) return 'يجب كتابة رد!'; } });
+            if(replyText) {
+                Swal.fire({title: 'جاري الإرسال...', background: '#1a1f2c', color: '#fff', didOpen: () => Swal.showLoading()});
+                await fetch('/api/admin-action', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({action: 'reply_complaint', tracking_id: tracking_id, reply: replyText}) });
+                await refreshData();
+                Swal.fire({...swalDark, icon: 'success', title: 'تم الإرسال بنجاح!', timer: 1500, showConfirmButton: false});
+            }
+        }
+
+        function editReply(tracking_id, student_name) {
+            const complaint = fullComplaints.find(c => c.tracking_id === tracking_id);
+            if(complaint) replyComplaint(tracking_id, student_name, complaint.admin_reply);
+        }
+
+        async function updateComplaintStatus(tracking_id, action) {
+            let confirmMsg = action === 'mark_spam' ? 'نقل الشكوى للمرفوضين (الأسئ)؟' : (action === 'delete_complaint' ? 'حذف الشكوى نهائياً؟' : 'استرجاع الشكوى لرد عليها؟');
+            if(confirm(confirmMsg)) {
+                await fetch('/api/admin-action', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({action: action, tracking_id: tracking_id}) });
+                await refreshData();
+            }
+        }
+
+        async function wipeDatabase() {
+            const { value: password } = await Swal.fire({...swalDark, icon: 'warning', title: 'تدمير قاعدة البيانات!', html: '<p style="color:#EF4444; font-size:14px;">سيتم مسح (المواد، اللجان، الشكاوى) بالكامل ولن يمكن استرجاعها.</p>', input: 'password', inputPlaceholder: 'أدخل الباسورد الخاص بك للتأكيد', showCancelButton: true, confirmButtonColor: '#EF4444', confirmButtonText: 'تأكيد التدمير', cancelButtonText: 'إلغاء' });
+            if (password) {
+                Swal.fire({ title: 'جاري مسح البيانات...', background: '#1a1f2c', color: '#fff', didOpen: () => Swal.showLoading() });
+                const res = await fetch('/api/admin-action', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({action: 'wipe_all', admin_password: password})});
+                const data = await res.json();
+                if(data.status === 'success') { 
+                    await refreshData();
+                    Swal.fire({...swalDark, icon: 'success', title: 'تم التنظيف بنجاح!'}); 
+                } else { 
+                    Swal.fire({...swalDark, icon: 'error', title: 'فشل!', text: data.message}); 
+                }
+            }
+        }
+
+        async function addSubject() { 
+            const { value: v } = await Swal.fire({ ...swalDark, title: 'إضافة مادة', html: `<input id="sn" class="login-input" placeholder="اسم المادة"><p style="text-align:right; font-size:12px; color:var(--text-muted);">أيقونة / صورة المادة:</p><input type="file" id="si" class="login-input">`, preConfirm: () => { const n = document.getElementById('sn').value, f = document.getElementById('si').files[0]; if(!n || !f) return Swal.showValidationMessage('مطلوب اسم وصورة'); return new Promise(r => { const rd = new FileReader(); rd.onload = (e) => r({ id: "SUB_"+Date.now(), name: n, image: e.target.result }); rd.readAsDataURL(f); }); } });
+            if(v) { 
+                Swal.fire({title: 'جاري الحفظ...', background: '#1a1f2c', color: '#fff', didOpen: () => Swal.showLoading()});
+                const res = await fetch('/api/admin-action', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action:'manage_subject', sub:'add', subject:v}) }); 
+                const data = await res.json();
+                if(data.status === 'error') {
+                    Swal.fire({...swalDark, icon: 'error', text: data.message});
+                } else {
+                    await refreshData(); 
+                    Swal.fire({...swalDark, icon: 'success', title: 'تم إضافة المادة!', timer: 1500, showConfirmButton: false});
+                }
+            }
+        }
+
+        async function addCommittee() {
+            let opts = globalSubjects.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+            if(!opts) return Swal.fire({...swalDark, icon:'warning', text:'قم بإضافة مادة واحدة على الأقل أولاً!'});
+            const { value: v } = await Swal.fire({ ...swalDark, title: 'توزيع قائمة لجان', html: `<select id="asub" class="login-input" style="background:#000;"><option value="" disabled selected>اختر المادة</option>${opts}</select><input id="acom" class="login-input" placeholder="اسم المدرج/اللجنة"><p style="text-align:right; font-size:12px; color:var(--text-muted);">الصق جميع الـ IDs تحت بعضها هنا:</p><textarea id="araw" class="login-input" style="height:150px; font-family:monospace;" placeholder="2220556\n2220557..."></textarea>`, preConfirm: () => { const sub = document.getElementById('asub').value, com = document.getElementById('acom').value, raw = document.getElementById('araw').value; if(!sub || !com || !raw) return Swal.showValidationMessage('بيانات ناقصة'); return { subject_id: sub, name: com, raw_ids: raw }; } });
+            if(v) { 
+                Swal.fire({title: 'جاري استخراج وتسجيل الأرقام...', background: '#1a1f2c', color: '#fff', didOpen: () => Swal.showLoading()}); 
+                await fetch('/api/admin-action', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action:'manage_committee', sub:'add', committee:v}) }); 
+                await refreshData(); 
+                Swal.fire({...swalDark, icon: 'success', title: 'تم توزيع اللجنة بنجاح!', timer: 1500, showConfirmButton: false});
+            }
+        }
+
+        async function addStaff() {
+            let subsHtml = '<p style="text-align:right; color:#9CA3AF; font-size:12px; margin-bottom:5px;">صلاحيات المواد (اختر المواد المسموحة للمعيد):</p><div style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:15px; direction:rtl;">';
+            globalSubjects.forEach(s => {
+                subsHtml += `<label style="background:#0d1117; padding:8px 12px; border-radius:6px; font-size:13px; border:1px solid #374151; cursor:pointer; color:#fff; display:flex; align-items:center; gap:8px;"><input type="checkbox" class="st-sub-check" value="${s.id}"> ${s.name}</label>`;
+            });
+            subsHtml += '</div>';
+
+            const { value: form } = await Swal.fire({ 
+                ...swalDark, 
+                title: 'إضافة معيد', 
+                html: `
+                    <input id="st-name" class="login-input" placeholder="الاسم (مثال: أ. أحمد)">
+                    <input id="st-user" class="login-input" placeholder="اسم الدخول (Username)">
+                    <input id="st-pass" class="login-input" type="password" placeholder="الباسورد">
+                    ${globalSubjects.length > 0 ? subsHtml : '<p style="color:#EF4444; font-size:12px; margin-bottom:15px;">تنبيه: أضف مواد أولاً لتحديد صلاحيات المعيد.</p>'}
+                `, 
+                preConfirm: () => { 
+                    const name = document.getElementById('st-name').value;
+                    const user = document.getElementById('st-user').value;
+                    const pass = document.getElementById('st-pass').value;
+                    
+                    const checkedBoxes = document.querySelectorAll('.st-sub-check:checked');
+                    const allowedSubjects = Array.from(checkedBoxes).map(cb => cb.value);
+
+                    if(!name || !user || !pass) return Swal.showValidationMessage('بيانات أساسية ناقصة'); 
+                    
+                    return { 
+                        name: name, 
+                        username: user, 
+                        password: pass, 
+                        allowed_subjects: allowedSubjects 
+                    }; 
+                } 
+            });
+            
+            if(form) { 
+                Swal.fire({title: 'جاري الإضافة...', background: '#1a1f2c', color: '#fff', didOpen: () => Swal.showLoading()});
+                const res = await fetch('/api/admin-action', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action:'manage_staff', sub:'add', staff:form}) }); 
+                const data = await res.json(); 
+                if(data.status === 'error') {
+                    Swal.fire({...swalDark, icon: 'error', text: data.message}); 
+                } else {
+                    await refreshData(); 
+                    Swal.fire({...swalDark, icon: 'success', title: 'تمت الإضافة بنجاح!', timer: 1500, showConfirmButton: false});
+                }
+            }
+        }
+
+        window.onload = refreshData;
+    </script>
+</body>
+</html>
