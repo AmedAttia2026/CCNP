@@ -96,7 +96,7 @@
 
     <div id="login-screen">
         <div class="login-card">
-            <i class="fas fa-shield-alt fa-4x" style="color:var(--gold); margin-bottom:15px;"></i>
+            <i class="fas fa-user-tie fa-4x" style="color:var(--gold); margin-bottom:20px;"></i>
             <h2 style="color:var(--gold); margin-bottom:5px; font-size:26px; font-weight:900;">Nexus System</h2>
             <p style="color:var(--text-muted); font-size:14px; margin-bottom:30px;">لوحة الإدارة والتحكم</p>
             
@@ -895,7 +895,7 @@
                     let role = staffMember.role; 
                     if(me.role === 'super_admin') role = document.getElementById('st-role-edit').value;
                     
-                    const checkedBoxes = document.querySelectorAll('.st-sub-check-edit:checked');
+                    const checkedBoxes = document.querySelectorAll('.st-sub-check:checked');
                     const allowedSubjects = Array.from(checkedBoxes).map(cb => cb.value);
 
                     if(!name || !user) return Swal.showValidationMessage('الاسم واسم الدخول مطلوبان'); 
