@@ -26,7 +26,6 @@
         
         #main-app { display: none; width: 100%; position: relative;}
         
-        /* Mobile Overlay */
         .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 999; backdrop-filter: blur(3px); }
 
         .sidebar { width: var(--sidebar-width); background: var(--bg-card); height: 100vh; position: fixed; right: 0; top: 0; border-left: 1px solid var(--border); padding: 25px 0; overflow-y: auto; z-index: 1000; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);}
@@ -38,7 +37,7 @@
         
         .sub-links { list-style: none; padding-right: 30px; display: none; margin-bottom: 10px;}
         .sub-links.open { display: block; animation: fadeIn 0.3s; }
-        .sub-links li { padding: 8px 10px; font-size: 12px; font-weight: bold; color: #9CA3AF; cursor: pointer; border-radius: 6px; margin-bottom: 3px; position: relative;}
+        .sub-links li { padding: 8px 10px; font-size: 12px; font-weight: bold; color: #9CA3AF; cursor: pointer; border-radius: 6px; margin-bottom: 3px; position: relative; line-height: 1.5;}
         .sub-links li::before { content: "▪"; position: absolute; right: -10px; color: var(--text-muted); transition: 0.3s;}
         .sub-links li.active, .sub-links li:hover { background: rgba(255, 179, 0, 0.15); color: var(--gold); }
         .sub-links li.active::before { color: var(--gold); }
@@ -53,17 +52,15 @@
         .content-section { display: none; } .content-section.active { display: block; animation: fadeIn 0.4s; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Mobile Header */
         .mobile-header { display: none; background: var(--bg-card); padding: 15px 20px; border-radius: 15px; margin-bottom: 20px; border: 1px solid var(--border); justify-content: space-between; align-items: center; box-shadow: 0 5px 15px rgba(0,0,0,0.3);}
         .menu-toggle { background: transparent; border: none; color: var(--gold); font-size: 24px; cursor: pointer; padding: 0 10px;}
 
-        /* Committee Filters */
-        .committee-filters { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 15px; border-bottom: 1px solid var(--border);}
+        .committee-filters { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 15px; border-bottom: 1px solid var(--border); scrollbar-width: none;}
+        .committee-filters::-webkit-scrollbar { display: none; }
         .com-btn { background: var(--bg-card); border: 1px solid var(--border); color: var(--text-muted); padding: 8px 15px; border-radius: 20px; font-size: 13px; font-weight: bold; cursor: pointer; transition: 0.3s; white-space: nowrap;}
         .com-btn:hover { border-color: var(--gold); color: #fff; }
         .com-btn.active { background: rgba(16, 185, 129, 0.1); border-color: #10B981; color: #10B981; }
 
-        /* Tables */
         .table-container { background: var(--bg-card); padding: 15px; border-radius: 15px; border: 1px solid var(--border); overflow-x: auto; margin-top: 10px;}
         table { width: 100%; border-collapse: collapse; min-width: 850px;}
         table th { padding: 12px; text-align: center; border-bottom: 2px solid var(--border); color: var(--text-muted); background: rgba(0,0,0,0.2); font-size: 13px;}
@@ -82,7 +79,6 @@
         .swal2-textarea, .swal2-input { background: #0d1117 !important; color: #fff !important; border: 1px solid #4a5568 !important; text-align: right; font-size: 15px !important; font-weight:bold;}
         .swal2-input:focus, .swal2-textarea:focus { border-color: var(--gold) !important; box-shadow: none !important;}
 
-        /* --- Mobile/Tablet Responsive Rules (Updated to 1024px) --- */
         @media (max-width: 1024px) {
             .sidebar { transform: translateX(100%); box-shadow: -5px 0 25px rgba(0,0,0,0.6); }
             .sidebar.open { transform: translateX(0); }
@@ -100,7 +96,7 @@
 
     <div id="login-screen">
         <div class="login-card">
-            <i class="fas fa-shield-alt fa-3x" style="color:var(--gold); margin-bottom:20px;"></i>
+            <i class="fas fa-user-tie fa-4x" style="color:var(--gold); margin-bottom:20px;"></i>
             <h2 style="color:#fff; margin-bottom:30px; font-size:22px;">لوحة الإدارة والتوجيه</h2>
             <input type="text" id="user" class="login-input" placeholder="اسم المستخدم">
             <input type="password" id="pass" class="login-input" placeholder="كلمة المرور">
@@ -114,7 +110,7 @@
         <aside class="sidebar">
             <div class="logo"><i class="fas fa-crown"></i> Control Panel</div>
             <ul class="nav-links">
-                <li onclick="switchTab('subjects', this)"><i class="fas fa-book icon-main"></i> إدارة المواد</li>
+                <li id="tab-subjects" onclick="switchTab('subjects', this)"><i class="fas fa-book icon-main"></i> إدارة المواد</li>
                 
                 <li id="tab-committees" onclick="toggleSubMenu('committees', this)">
                     <i class="fas fa-layer-group icon-main"></i> اللجان وقوائم الطلاب <i class="fas fa-chevron-down chevron"></i>
@@ -134,11 +130,11 @@
                 
                 <hr style="border:0; border-top:1px solid var(--border); margin:15px 10px;">
 
-                <li class="admin-only" onclick="toggleSystem()" id="toggle-sys-btn" style="transition:0.3s; margin-bottom:5px;"></li>
+                <li class="super-only" onclick="toggleSystem()" id="toggle-sys-btn" style="transition:0.3s; margin-bottom:5px;"></li>
 
-                <li onclick="switchTab('staff', this)" class="admin-only"><i class="fas fa-users-cog icon-main"></i> المعيدين والصلاحيات</li>
+                <li id="tab-staff" onclick="switchTab('staff', this)" class="staff-manager-only"><i class="fas fa-users-cog icon-main"></i> إدارة الطاقم</li>
 
-                <li class="wipe-btn-li admin-only" onclick="wipeDatabase()"><i class="fas fa-dumpster-fire icon-main"></i> مسح الداتابيز بالكامل</li>
+                <li class="wipe-btn-li super-only" onclick="wipeDatabase()"><i class="fas fa-dumpster-fire icon-main"></i> مسح الداتابيز بالكامل</li>
                 <li style="color:#EF4444; margin-top:5px;" onclick="location.href='/logout-gateway-vip-x9v2-pL7q-2026'"><i class="fas fa-power-off icon-main"></i> تسجيل خروج</li>
             </ul>
         </aside>
@@ -154,10 +150,23 @@
             </div>
 
             <div id="subjects" class="content-section">
-                <button class="btn btn-green admin-only" onclick="addSubject()"><i class="fas fa-plus"></i> إضافة مادة جديدة</button>
-                <div class="table-container">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:15px; background:var(--bg-card); padding:10px; border-radius:12px; border:1px solid var(--border);">
+                    <button class="btn btn-green super-only" onclick="addSubject()"><i class="fas fa-plus"></i> إضافة مادة جديدة</button>
+                    
+                    <div class="committee-filters" id="subject-nav-filters" style="margin-bottom:0; padding-bottom:0; border:none; flex:1; justify-content:flex-end;">
+                        <button class="com-btn active" onclick="filterSubjectsTab('all', this)">الكل</button>
+                        <button class="com-btn" onclick="filterSubjectsTab('الفرقة الأولى', this)">فرقة 1</button>
+                        <button class="com-btn" onclick="filterSubjectsTab('الفرقة الثانية', this)">فرقة 2</button>
+                        <button class="com-btn" onclick="filterSubjectsTab('الفرقة الثالثة_Software', this)">فرقة 3 (SW)</button>
+                        <button class="com-btn" onclick="filterSubjectsTab('الفرقة الثالثة_Network', this)">فرقة 3 (NW)</button>
+                        <button class="com-btn" onclick="filterSubjectsTab('الفرقة الرابعة_Software', this)">فرقة 4 (SW)</button>
+                        <button class="com-btn" onclick="filterSubjectsTab('الفرقة الرابعة_Network', this)">فرقة 4 (NW)</button>
+                    </div>
+                </div>
+
+                <div class="table-container" style="margin-top:0;">
                     <table>
-                        <thead><tr><th>الصورة</th><th>المادة</th><th>بواسطة</th><th>إجراء</th></tr></thead>
+                        <thead><tr><th>الصورة</th><th>المادة</th><th>الفرقة والقسم</th><th>بواسطة</th><th>إجراء</th></tr></thead>
                         <tbody id="subjects-list"></tbody>
                     </table>
                 </div>
@@ -165,7 +174,7 @@
 
             <div id="committees" class="content-section">
                 <h3 id="committees-title" style="color:var(--gold); margin-bottom:10px; font-size:16px;"><i class="fas fa-layer-group"></i> قوائم اللجان</h3>
-                <button class="btn btn-gold" onclick="addCommittee()"><i class="fas fa-paste"></i> لصق وإنشاء لجنة طلاب</button>
+                <button class="btn btn-gold" onclick="addCommittee()"><i class="fas fa-paste"></i> لصق وإنشاء لجنة للطلاب</button>
                 <div class="table-container">
                     <table>
                         <thead><tr><th>اللجنة / المدرج</th><th>عدد الطلاب</th><th>بواسطة</th><th>إجراء</th></tr></thead>
@@ -207,11 +216,11 @@
                 </div>
             </div>
 
-            <div id="staff" class="content-section admin-only">
-                <button class="btn btn-green" onclick="addStaff()"><i class="fas fa-user-plus"></i> إضافة معيد للنظام</button>
+            <div id="staff" class="content-section staff-manager-only">
+                <button class="btn btn-green" onclick="addStaff()"><i class="fas fa-user-plus"></i> إضافة عضو جديد للنظام</button>
                 <div class="table-container">
                     <table>
-                        <thead><tr><th>اسم المعيد</th><th>اسم الدخول</th><th>المواد المسموحة</th><th>الصفة</th><th>إجراء</th></tr></thead>
+                        <thead><tr><th>الاسم</th><th>اسم الدخول</th><th>المواد المسموحة</th><th>الصفة</th><th>إجراء</th></tr></thead>
                         <tbody id="staff-list"></tbody>
                     </table>
                 </div>
@@ -224,9 +233,11 @@
         let globalSubjects = [];
         let globalCommittees = [];
         let fullComplaints = [];
+        let globalStaff = [];
         let systemIsOpen = true;
         
         let committeeFilter = JSON.parse(localStorage.getItem('admin_committee_filter')) || { sub: '' };
+        let activeSubjectsFilter = 'all';
 
         let compFilters = JSON.parse(localStorage.getItem('admin_comp_filters')) || {
             'pending': { sub: '', com: 'all' },
@@ -236,7 +247,6 @@
 
         const swalDark = { background: '#1F2937', color: '#fff', confirmButtonColor: '#FFB300' };
 
-        // دالة فتح وقفل الـ Sidebar في الموبايل
         function toggleSidebar() {
             const sidebar = document.querySelector('.sidebar');
             const overlay = document.getElementById('mobile-overlay');
@@ -260,13 +270,35 @@
             globalSubjects = data.subjects || [];
             globalCommittees = data.committees || [];
             fullComplaints = data.complaints || [];
+            globalStaff = data.staff || [];
             systemIsOpen = data.system_open; 
+            
+            const yearOrder = {
+                "الفرقة الأولى": 1,
+                "الفرقة الثانية": 2,
+                "الفرقة الثالثة": 3,
+                "الفرقة الرابعة": 4
+            };
+            
+            globalSubjects.sort((a, b) => {
+                const yearA = yearOrder[a.year] || 99;
+                const yearB = yearOrder[b.year] || 99;
+                if (yearA !== yearB) return yearA - yearB;
+                return (a.department || '').localeCompare(b.department || '', 'ar');
+            });
             
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('main-app').style.display = 'flex';
-            document.getElementById('welcome-text').innerText = `مرحباً، ${me.name}`;
+            
+            let roleBadge = '';
+            if(me.role === 'super_admin') roleBadge = '<span style="color:var(--gold); font-size:12px; background:#000; padding:2px 8px; border-radius:10px;">الآدمن الرئيسي</span>';
+            else if(me.role === 'doctor') roleBadge = '<span style="color:#10B981; font-size:12px; background:#000; padding:2px 8px; border-radius:10px;">دكتور مادة</span>';
+            else roleBadge = '<span style="color:#3B82F6; font-size:12px; background:#000; padding:2px 8px; border-radius:10px;">معيد</span>';
+            
+            document.getElementById('welcome-text').innerHTML = `مرحباً، ${me.name} ${roleBadge}`;
 
-            if(me.role !== 'super_admin') document.querySelectorAll('.admin-only').forEach(e => e.style.display = 'none');
+            if(me.role !== 'super_admin') document.querySelectorAll('.super-only').forEach(e => e.style.display = 'none');
+            if(me.role === 'ta') document.querySelectorAll('.staff-manager-only').forEach(e => e.style.display = 'none');
 
             if(me.role === 'super_admin') {
                 const sysBtn = document.getElementById('toggle-sys-btn');
@@ -283,30 +315,28 @@
                 }
             }
 
-            document.getElementById('subjects-list').innerHTML = globalSubjects.map(s => `<tr><td><img src="${s.image}" width="35" style="border-radius:6px;"></td><td style="color:var(--gold); font-weight:bold;">${s.name}</td><td>${s.added_by}</td><td>${me.role === 'super_admin' ? `<button class="btn btn-red" onclick="deleteAction('manage_subject', '${s.id}')"><i class="fas fa-trash"></i> حذف</button>` : '-'}</td></tr>`).join('');
-            
-            if(me.role === 'super_admin') {
-                document.getElementById('staff-list').innerHTML = data.staff.map(s => {
+            if(me.role === 'super_admin' || me.role === 'doctor') {
+                document.getElementById('staff-list').innerHTML = globalStaff.map(s => {
                     let allowedNames = '-';
-                    if (s.role !== 'super_admin' && s.allowed_subjects) {
+                    if (s.allowed_subjects) {
                         allowedNames = s.allowed_subjects.map(subId => {
                             let fSub = globalSubjects.find(gs => gs.id === subId);
                             return fSub ? `<span style="background:rgba(255, 179, 0, 0.1); color:var(--gold); padding:2px 6px; border-radius:4px; font-size:11px; margin:2px; display:inline-block;">${fSub.name}</span>` : '';
                         }).join('');
-                    } else if (s.role === 'super_admin') {
-                        allowedNames = '<span style="color:#10B981;">كل المواد</span>';
                     }
+                    
+                    let roleStr = s.role === 'doctor' ? '<i class="fas fa-user-tie" style="color:#10B981"></i> دكتور مادة' : '<i class="fas fa-user-graduate" style="color:#3B82F6"></i> معيد';
 
                     return `
                         <tr>
                             <td style="font-weight:bold;">${s.name}</td>
                             <td style="font-family:monospace; color:var(--text-muted);">${s.username}</td>
-                            <td>${allowedNames || 'بدون صلاحيات'}</td>
-                            <td>${s.role === 'super_admin' ? '<i class="fas fa-crown" style="color:var(--gold)"></i> دكتور المادة' : 'معيد'}</td>
+                            <td style="line-height:1.8;">${allowedNames || 'بدون صلاحيات'}</td>
+                            <td>${roleStr}</td>
                             <td>
-                                <div style="display:flex; justify-content:center; gap:5px; flex-direction:column;">
-                                    <button class="btn btn-blue" onclick="changePassword('${s.username}')"><i class="fas fa-key"></i> باسورد</button>
-                                    ${s.role !== 'super_admin' ? `<button class="btn btn-red" onclick="deleteAction('manage_staff', '${s.username}', true)"><i class="fas fa-trash"></i> حذف</button>` : ''}
+                                <div style="display:flex; justify-content:center; gap:5px; flex-wrap:wrap;">
+                                    <button class="btn btn-gold" onclick="editStaff('${s.username}')"><i class="fas fa-edit"></i> تعديل</button>
+                                    <button class="btn btn-red" onclick="deleteAction('manage_staff', '${s.username}', true)"><i class="fas fa-trash"></i> حذف</button>
                                 </div>
                             </td>
                         </tr>
@@ -315,22 +345,71 @@
             }
             
             if(globalSubjects.length > 0) {
-                if(!committeeFilter.sub) committeeFilter.sub = globalSubjects[0].id;
+                if(!committeeFilter.sub || !globalSubjects.find(s=>s.id===committeeFilter.sub)) committeeFilter.sub = globalSubjects[0].id;
                 ['pending', 'resolved', 'spam'].forEach(tab => {
-                    if(!compFilters[tab].sub) compFilters[tab].sub = globalSubjects[0].id;
+                    if(!compFilters[tab].sub || !globalSubjects.find(s=>s.id===compFilters[tab].sub)) compFilters[tab].sub = globalSubjects[0].id;
                 });
                 saveAllFilters();
             }
 
+            renderSubjectsTable();
             buildSidebarMenus();
             renderCommittees();
             renderComplaints('pending');
             renderComplaints('resolved');
             renderComplaints('spam');
 
-            if(!document.querySelector('.content-section.active') || document.querySelector('.content-section.active').id === 'subjects') {
+            if(!document.querySelector('.content-section.active')) {
                 document.getElementById('tab-pending').click();
             }
+        }
+
+        function filterSubjectsTab(filterValue, btnEl) {
+            activeSubjectsFilter = filterValue;
+            document.querySelectorAll('#subject-nav-filters .com-btn').forEach(btn => btn.classList.remove('active'));
+            if(btnEl) btnEl.classList.add('active');
+            renderSubjectsTable();
+        }
+
+        function renderSubjectsTable() {
+            let filteredSubs = globalSubjects;
+
+            if (activeSubjectsFilter !== 'all') {
+                if(activeSubjectsFilter.includes('_')) {
+                    const parts = activeSubjectsFilter.split('_');
+                    const targetYear = parts[0];
+                    const targetDept = parts[1];
+                    filteredSubs = globalSubjects.filter(s => s.year === targetYear && (s.department === targetDept || s.department === 'عام (IT)'));
+                } else {
+                    filteredSubs = globalSubjects.filter(s => s.year === activeSubjectsFilter);
+                }
+            }
+
+            if(filteredSubs.length === 0) {
+                document.getElementById('subjects-list').innerHTML = `<tr><td colspan="5" style="color:var(--text-muted); padding:30px;">لا توجد مواد مضافة في هذا القسم.</td></tr>`;
+                return;
+            }
+
+            document.getElementById('subjects-list').innerHTML = filteredSubs.map(s => {
+                let deptColor = '#3B82F6';
+                let bgDeptColor = 'rgba(59, 130, 246, 0.2)';
+                if (s.department === 'Software') { deptColor = '#10B981'; bgDeptColor = 'rgba(16, 185, 129, 0.2)'; }
+                else if (s.department === 'Network') { deptColor = '#EF4444'; bgDeptColor = 'rgba(239, 68, 68, 0.2)'; }
+
+                return `
+                <tr>
+                    <td><img src="${s.image}" width="35" style="border-radius:6px; background:#fff; padding:2px;"></td>
+                    <td style="color:var(--gold); font-weight:bold; font-size:15px;">${s.name}</td>
+                    <td>
+                        <div style="display:flex; flex-direction:column; align-items:center; gap:4px;">
+                            <span style="color:#fff; font-size:12px; font-weight:bold;">${s.year || '-'}</span>
+                            <span style="background:${bgDeptColor}; color:${deptColor}; padding:2px 8px; border-radius:6px; font-size:11px; font-weight:bold; white-space:nowrap;">${s.department || '-'}</span>
+                        </div>
+                    </td>
+                    <td style="color:var(--text-muted); font-size:12px;">${s.added_by}</td>
+                    <td>${me.role === 'super_admin' ? `<button class="btn btn-red" onclick="deleteAction('manage_subject', '${s.id}')"><i class="fas fa-trash"></i> حذف</button>` : '-'}</td>
+                </tr>
+            `}).join('');
         }
 
         async function toggleSystem() {
@@ -343,28 +422,6 @@
                 await fetch('/api/admin-action', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({action: 'toggle_system', is_open: newState}) });
                 await refreshData();
                 Swal.fire({...swalDark, icon: 'success', title: newState ? 'تم تفعيل النظام' : 'تم إيقاف النظام', timer: 1500, showConfirmButton: false});
-            }
-        }
-
-        async function changePassword(targetUsername) {
-            const { value: newPass } = await Swal.fire({
-                title: `تغيير باسورد (${targetUsername})`,
-                input: 'password',
-                inputPlaceholder: 'أدخل الباسورد الجديد هنا...',
-                background: '#1a1f2c', color: '#fff',
-                confirmButtonColor: '#FFB300',
-                showCancelButton: true,
-                cancelButtonText: 'إلغاء'
-            });
-            if (newPass) {
-                Swal.fire({title: 'جاري التعديل...', background: '#1a1f2c', color: '#fff', didOpen: () => Swal.showLoading()});
-                const res = await fetch('/api/admin-action', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({action: 'change_password', target_user: targetUsername, new_password: newPass}) });
-                const data = await res.json();
-                if (data.status === 'success') {
-                    Swal.fire({...swalDark, icon: 'success', title: 'تم تغيير الباسورد بنجاح!', timer: 1500, showConfirmButton: false});
-                } else {
-                    Swal.fire({...swalDark, icon: 'error', text: data.message});
-                }
             }
         }
 
@@ -409,7 +466,10 @@
                         activeCls = compFilters[tab].sub === s.id ? 'active' : '';
                         clickHandler = `filterComplaintsBySubject('${s.id}', '${tab}', this)`;
                     }
-                    html += `<li class="${activeCls}" onclick="${clickHandler}">${s.name}</li>`;
+                    
+                    const deptStr = s.department === 'عام (IT)' ? '' : ` - ${s.department}`;
+                    const displayName = `${s.name} <br><span style="font-size:10px; color:#6B7280; font-weight:normal;">(${s.year}${deptStr})</span>`;
+                    html += `<li class="${activeCls}" onclick="${clickHandler}" style="display:block;">${displayName}</li>`;
                 });
                 menu.innerHTML = html;
             });
@@ -418,25 +478,25 @@
         function filterCommitteesBySubject(subId, el) {
             committeeFilter.sub = subId;
             saveAllFilters();
-            
             document.querySelectorAll('#menu-committees li').forEach(li => li.classList.remove('active'));
             el.classList.add('active');
-            
             if(window.innerWidth <= 1024) toggleSidebar();
             renderCommittees();
         }
 
         function renderCommittees() {
             const activeSub = committeeFilter.sub;
-            const sName = globalSubjects.find(s => s.id === activeSub)?.name || '...';
+            const subjectObj = globalSubjects.find(s => s.id === activeSub);
+            const sName = subjectObj?.name || '...';
+            const sDetails = subjectObj ? `(${subjectObj.year} - ${subjectObj.department})` : '';
             
             const list = globalCommittees.filter(c => c.subject_id === activeSub);
             const totalStudents = list.reduce((sum, c) => sum + (c.ids ? c.ids.length : 0), 0);
             
             document.getElementById('committees-title').innerHTML = `
-                <i class="fas fa-layer-group"></i> قوائم اللجان - مادة: <span style="color:#fff;">${sName}</span> 
+                <i class="fas fa-layer-group"></i> قوائم اللجان - مادة: <span style="color:#fff;">${sName} <span style="font-size:12px;color:var(--text-muted);">${sDetails}</span></span> 
                 <span style="display:inline-block; margin-top:10px; color:var(--gold); border:1px solid var(--gold); background:rgba(255,179,0,0.1); padding:4px 10px; border-radius:12px; font-size:12px; margin-right:5px; font-weight:bold;">
-                    (${list.length} لجان / ${totalStudents} طالب مسجل)
+                    (${list.length} لجان / ${totalStudents} طالب)
                 </span>
             `;
 
@@ -452,19 +512,53 @@
                     <td style="color:#10B981; font-weight:bold;">${c.committee_name}</td>
                     <td><span style="background:rgba(16,185,129,0.1); color:#10B981; padding:6px 12px; border-radius:8px;"><span style="font-size:18px; font-weight:900; color:#fff;">${c.ids.length}</span> طالب</span></td>
                     <td>${c.added_by}</td>
-                    <td><button class="btn btn-red" onclick="deleteAction('manage_committee', '${c.committee_id}')"><i class="fas fa-trash"></i> حذف</button></td>
+                    <td>
+                        <div style="display:flex; justify-content:center; gap:5px; flex-wrap:wrap;">
+                            <button class="btn btn-gold" onclick="editCommittee('${c.committee_id}')"><i class="fas fa-edit"></i> تعديل</button>
+                            <button class="btn btn-red" onclick="deleteAction('manage_committee', '${c.committee_id}')"><i class="fas fa-trash"></i> حذف</button>
+                        </div>
+                    </td>
                 </tr>
             `).join('');
+        }
+
+        // --- الميزة الجديدة: تعديل اللجنة ---
+        async function editCommittee(comId) {
+            const com = globalCommittees.find(c => c.committee_id === comId);
+            if (!com) return;
+
+            const rawIdsStr = com.ids.join('\n');
+
+            const { value: v } = await Swal.fire({ 
+                ...swalDark, 
+                title: 'تعديل بيانات اللجنة', 
+                html: `
+                    <input id="ecom-name" class="login-input" placeholder="اسم المدرج/اللجنة" value="${com.committee_name}">
+                    <p style="text-align:right; font-size:12px; color:var(--text-muted);">قائمة الـ IDs (كل رقم في سطر):</p>
+                    <textarea id="ecom-raw" class="login-input" style="height:150px; font-family:monospace;">${rawIdsStr}</textarea>
+                `, 
+                preConfirm: () => { 
+                    const name = document.getElementById('ecom-name').value;
+                    const raw = document.getElementById('ecom-raw').value; 
+                    if(!name || !raw) return Swal.showValidationMessage('بيانات ناقصة'); 
+                    return { committee_id: com.committee_id, name: name, raw_ids: raw }; 
+                } 
+            });
+            
+            if(v) { 
+                Swal.fire({title: 'جاري الحفظ...', background: '#1a1f2c', color: '#fff', didOpen: () => Swal.showLoading()}); 
+                await fetch('/api/admin-action', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action:'manage_committee', sub:'edit', committee:v}) }); 
+                await refreshData(); 
+                Swal.fire({...swalDark, icon: 'success', title: 'تم التعديل بنجاح!', timer: 1500, showConfirmButton: false});
+            }
         }
 
         function filterComplaintsBySubject(subId, tabName, el) {
             compFilters[tabName].sub = subId;
             compFilters[tabName].com = 'all'; 
             saveAllFilters();
-            
             document.querySelectorAll(`#menu-${tabName} li`).forEach(li => li.classList.remove('active'));
             el.classList.add('active');
-
             if(window.innerWidth <= 1024) toggleSidebar();
             renderComplaints(tabName);
         }
@@ -479,7 +573,6 @@
             const activeSub = compFilters[tabName].sub;
             const activeCom = compFilters[tabName].com;
             
-            // الفلتر المزدوج للبحث في اللجنة المسجلة والفعلية معاً
             let list = fullComplaints.filter(c => c.status === tabName);
             if(activeSub) list = list.filter(c => c.subject_id === activeSub);
             if(activeCom !== 'all') list = list.filter(c => c.assigned_committee === activeCom || (c.actual_committee && c.actual_committee === activeCom));
@@ -520,7 +613,6 @@
             tbody.innerHTML = list.map(c => {
                 const isChanged = c.assigned_committee !== c.actual_committee && c.actual_committee && c.actual_committee.trim() !== '';
                 
-                // تصميم جديد بارز لمكان اللجنة
                 const locs = isChanged 
                     ? `<div style="background:rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); padding: 8px; border-radius: 8px; font-size: 13px; line-height: 1.6; text-align: right; min-width: 120px; display:inline-block;">
                          <span style="color:var(--text-muted)">المُسجل:</span> <strike style="color:#9CA3AF; font-size:14px; font-weight:bold;">${c.assigned_committee}</strike><br>
@@ -552,14 +644,15 @@
             
             document.getElementById(id).classList.add('active');
             if(el) el.classList.add('active');
-            
             if(window.innerWidth <= 1024) toggleSidebar();
         }
 
         async function deleteAction(action, id, isStaff = false) {
             if(confirm('تأكيد الحذف النهائي؟')) {
-                await fetch('/api/admin-action', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(isStaff ? {action, sub: 'delete', username: id} : {action, sub: 'delete', id}) });
-                await refreshData();
+                const res = await fetch('/api/admin-action', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(isStaff ? {action, sub: 'delete', username: id} : {action, sub: 'delete', id}) });
+                const data = await res.json();
+                if(data.status === 'error') Swal.fire({...swalDark, icon: 'error', text: data.message});
+                else await refreshData();
             }
         }
 
@@ -602,24 +695,77 @@
         }
 
         async function addSubject() { 
-            const { value: v } = await Swal.fire({ ...swalDark, title: 'إضافة مادة', html: `<input id="sn" class="login-input" placeholder="اسم المادة"><p style="text-align:right; font-size:12px; color:var(--text-muted);">أيقونة / صورة المادة:</p><input type="file" id="si" class="login-input">`, preConfirm: () => { const n = document.getElementById('sn').value, f = document.getElementById('si').files[0]; if(!n || !f) return Swal.showValidationMessage('مطلوب اسم وصورة'); return new Promise(r => { const rd = new FileReader(); rd.onload = (e) => r({ id: "SUB_"+Date.now(), name: n, image: e.target.result }); rd.readAsDataURL(f); }); } });
+            const formHtml = `
+                <input id="sn" class="login-input" placeholder="اسم المادة">
+                <select id="s-year" class="login-input" style="background:#000;">
+                    <option value="" disabled selected>اختر الفرقة الدراسية</option>
+                    <option value="الفرقة الأولى">الفرقة الأولى</option>
+                    <option value="الفرقة الثانية">الفرقة الثانية</option>
+                    <option value="الفرقة الثالثة">الفرقة الثالثة</option>
+                    <option value="الفرقة الرابعة">الفرقة الرابعة</option>
+                </select>
+                <select id="s-dept" class="login-input" style="background:#000;"><option value="عام (IT)">عام (IT)</option></select>
+                <p style="text-align:right; font-size:12px; color:var(--text-muted);">أيقونة / صورة المادة:</p>
+                <input type="file" id="si" class="login-input">
+            `;
+            const { value: v } = await Swal.fire({ 
+                ...swalDark, title: 'إضافة مادة جديدة', html: formHtml,
+                didOpen: () => {
+                    document.getElementById('s-year').addEventListener('change', (e) => {
+                        const deptSelect = document.getElementById('s-dept');
+                        if (e.target.value === 'الفرقة الثالثة' || e.target.value === 'الفرقة الرابعة') {
+                            deptSelect.innerHTML = '<option value="عام (IT)">عام (IT)</option><option value="Software">Software</option><option value="Network">Network</option>';
+                        } else {
+                            deptSelect.innerHTML = '<option value="عام (IT)">عام (IT)</option>';
+                        }
+                    });
+                },
+                preConfirm: () => { 
+                    const n = document.getElementById('sn').value, y = document.getElementById('s-year').value, d = document.getElementById('s-dept').value, f = document.getElementById('si').files[0]; 
+                    if(!n || !y || !d || !f) return Swal.showValidationMessage('يرجى استكمال جميع البيانات!'); 
+                    return new Promise(r => { const rd = new FileReader(); rd.onload = (e) => r({ id: "SUB_"+Date.now(), name: n, year: y, department: d, image: e.target.result }); rd.readAsDataURL(f); }); 
+                } 
+            });
+
             if(v) { 
                 Swal.fire({title: 'جاري الحفظ...', background: '#1a1f2c', color: '#fff', didOpen: () => Swal.showLoading()});
                 const res = await fetch('/api/admin-action', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action:'manage_subject', sub:'add', subject:v}) }); 
                 const data = await res.json();
-                if(data.status === 'error') {
-                    Swal.fire({...swalDark, icon: 'error', text: data.message});
-                } else {
-                    await refreshData(); 
-                    Swal.fire({...swalDark, icon: 'success', title: 'تم إضافة المادة!', timer: 1500, showConfirmButton: false});
-                }
+                if(data.status === 'error') Swal.fire({...swalDark, icon: 'error', text: data.message});
+                else { await refreshData(); Swal.fire({...swalDark, icon: 'success', title: 'تم إضافة المادة!', timer: 1500, showConfirmButton: false}); }
             }
         }
 
         async function addCommittee() {
-            let opts = globalSubjects.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+            let activeSubId = committeeFilter.sub;
+            let opts = globalSubjects.map(s => {
+                let isSelected = (s.id === activeSubId) ? 'selected' : '';
+                return `<option value="${s.id}" ${isSelected}>${s.name} (${s.year} - ${s.department})</option>`;
+            }).join('');
+            
             if(!opts) return Swal.fire({...swalDark, icon:'warning', text:'قم بإضافة مادة واحدة على الأقل أولاً!'});
-            const { value: v } = await Swal.fire({ ...swalDark, title: 'توزيع قائمة لجان', html: `<select id="asub" class="login-input" style="background:#000;"><option value="" disabled selected>اختر المادة</option>${opts}</select><input id="acom" class="login-input" placeholder="اسم المدرج/اللجنة"><p style="text-align:right; font-size:12px; color:var(--text-muted);">الصق جميع الـ IDs تحت بعضها هنا:</p><textarea id="araw" class="login-input" style="height:150px; font-family:monospace;" placeholder="2220556\n2220557..."></textarea>`, preConfirm: () => { const sub = document.getElementById('asub').value, com = document.getElementById('acom').value, raw = document.getElementById('araw').value; if(!sub || !com || !raw) return Swal.showValidationMessage('بيانات ناقصة'); return { subject_id: sub, name: com, raw_ids: raw }; } });
+            
+            const { value: v } = await Swal.fire({ 
+                ...swalDark, 
+                title: 'توزيع قائمة لجان', 
+                html: `
+                    <select id="asub" class="login-input" style="background:#000;">
+                        <option value="" disabled>اختر المادة</option>
+                        ${opts}
+                    </select>
+                    <input id="acom" class="login-input" placeholder="اسم المدرج/اللجنة">
+                    <p style="text-align:right; font-size:12px; color:var(--text-muted);">الصق جميع الـ IDs تحت بعضها هنا:</p>
+                    <textarea id="araw" class="login-input" style="height:150px; font-family:monospace;" placeholder="2220556\n2220557..."></textarea>
+                `, 
+                preConfirm: () => { 
+                    const sub = document.getElementById('asub').value;
+                    const com = document.getElementById('acom').value;
+                    const raw = document.getElementById('araw').value; 
+                    if(!sub || !com || !raw) return Swal.showValidationMessage('بيانات ناقصة'); 
+                    return { subject_id: sub, name: com, raw_ids: raw }; 
+                } 
+            });
+            
             if(v) { 
                 Swal.fire({title: 'جاري استخراج وتسجيل الأرقام...', background: '#1a1f2c', color: '#fff', didOpen: () => Swal.showLoading()}); 
                 await fetch('/api/admin-action', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action:'manage_committee', sub:'add', committee:v}) }); 
@@ -628,26 +774,61 @@
             }
         }
 
-        async function addStaff() {
-            let subsHtml = '<p style="text-align:right; color:#9CA3AF; font-size:12px; margin-bottom:5px;">صلاحيات المواد (اختر المواد المسموحة للمعيد):</p><div style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:15px; direction:rtl;">';
-            globalSubjects.forEach(s => {
-                subsHtml += `<label style="background:#0d1117; padding:8px 12px; border-radius:6px; font-size:13px; border:1px solid #374151; cursor:pointer; color:#fff; display:flex; align-items:center; gap:8px;"><input type="checkbox" class="st-sub-check" value="${s.id}"> ${s.name}</label>`;
+        function getGroupedSubjectsHTML(allowedSubjects = []) {
+            let html = '<div style="background:#0d1117; padding:15px; border-radius:10px; border:1px solid #374151; max-height:250px; overflow-y:auto; text-align:right;">';
+            const years = ["الفرقة الأولى", "الفرقة الثانية", "الفرقة الثالثة", "الفرقة الرابعة"];
+            
+            years.forEach(year => {
+                const yearSubs = globalSubjects.filter(s => s.year === year);
+                if (yearSubs.length > 0) {
+                    html += `<div style="margin-bottom: 15px;">
+                                <h4 style="color:var(--gold); margin-bottom:10px; font-size:14px; border-bottom:1px dashed #374151; padding-bottom:5px;">${year}</h4>
+                                <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap:8px;">`;
+                    yearSubs.forEach(s => {
+                        const isChecked = allowedSubjects.includes(s.id) ? 'checked' : '';
+                        const deptLabel = s.department === 'عام (IT)' ? '' : `<span style="color:#9CA3AF; font-size:11px;">(${s.department})</span>`;
+                        html += `<label style="background:#1F2937; padding:8px 10px; border-radius:8px; font-size:12px; cursor:pointer; color:#fff; display:flex; align-items:center; gap:8px; border:1px solid #4B5563; transition:0.3s; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${s.name}">
+                                    <input type="checkbox" class="st-sub-check" value="${s.id}" ${isChecked} style="accent-color:var(--gold); transform:scale(1.2); flex-shrink:0;"> 
+                                    <span style="overflow:hidden; text-overflow:ellipsis;">${s.name} ${deptLabel}</span>
+                                 </label>`;
+                    });
+                    html += `</div></div>`;
+                }
             });
-            subsHtml += '</div>';
+            html += '</div>';
+            return html === '<div style="background:#0d1117; padding:15px; border-radius:10px; border:1px solid #374151; max-height:250px; overflow-y:auto; text-align:right;"></div>' ? '<p style="color:#EF4444; font-size:12px;">لا توجد مواد مضافة بعد.</p>' : html;
+        }
+
+        async function addStaff() {
+            let roleSelectHtml = '';
+            if(me.role === 'super_admin') {
+                roleSelectHtml = `
+                    <select id="st-role" class="login-input" style="background:#000;">
+                        <option value="doctor">تحديد كـ دكتور مادة</option>
+                        <option value="ta" selected>تحديد كـ معيد</option>
+                    </select>
+                `;
+            } else {
+                roleSelectHtml = `<p style="text-align:right; color:#10B981; font-size:12px; margin-bottom:15px;"><i class="fas fa-info-circle"></i> سيتم إضافة هذا المستخدم كـ (معيد) تحت إشرافك.</p>`;
+            }
 
             const { value: form } = await Swal.fire({ 
-                ...swalDark, 
-                title: 'إضافة معيد', 
+                ...swalDark, width: '600px',
+                title: 'إضافة عضو للطاقم', 
                 html: `
                     <input id="st-name" class="login-input" placeholder="الاسم (مثال: أ. أحمد)">
                     <input id="st-user" class="login-input" placeholder="اسم الدخول (Username)">
                     <input id="st-pass" class="login-input" type="password" placeholder="الباسورد">
-                    ${globalSubjects.length > 0 ? subsHtml : '<p style="color:#EF4444; font-size:12px; margin-bottom:15px;">تنبيه: أضف مواد أولاً لتحديد صلاحيات المعيد.</p>'}
+                    ${roleSelectHtml}
+                    <p style="text-align:right; color:#9CA3AF; font-size:12px; margin-bottom:5px;">صلاحيات المواد المسموحة:</p>
+                    ${getGroupedSubjectsHTML([])}
                 `, 
                 preConfirm: () => { 
                     const name = document.getElementById('st-name').value;
                     const user = document.getElementById('st-user').value;
                     const pass = document.getElementById('st-pass').value;
+                    let role = 'ta'; 
+                    if(me.role === 'super_admin') role = document.getElementById('st-role').value;
                     
                     const checkedBoxes = document.querySelectorAll('.st-sub-check:checked');
                     const allowedSubjects = Array.from(checkedBoxes).map(cb => cb.value);
@@ -657,7 +838,8 @@
                     return { 
                         name: name, 
                         username: user, 
-                        password: pass, 
+                        password: pass,
+                        role: role,
                         allowed_subjects: allowedSubjects 
                     }; 
                 } 
@@ -672,6 +854,70 @@
                 } else {
                     await refreshData(); 
                     Swal.fire({...swalDark, icon: 'success', title: 'تمت الإضافة بنجاح!', timer: 1500, showConfirmButton: false});
+                }
+            }
+        }
+
+        async function editStaff(targetUsername) {
+            const staffMember = globalStaff.find(s => s.username === targetUsername);
+            if(!staffMember) return;
+
+            let roleSelectHtml = '';
+            if(me.role === 'super_admin') {
+                const docSel = staffMember.role === 'doctor' ? 'selected' : '';
+                const taSel = staffMember.role === 'ta' ? 'selected' : '';
+                roleSelectHtml = `
+                    <select id="st-role-edit" class="login-input" style="background:#000;">
+                        <option value="doctor" ${docSel}>دكتور مادة</option>
+                        <option value="ta" ${taSel}>معيد</option>
+                    </select>
+                `;
+            } else {
+                roleSelectHtml = `<p style="text-align:right; color:#10B981; font-size:12px; margin-bottom:15px;"><i class="fas fa-info-circle"></i> هذا المستخدم مسجل كـ (معيد).</p>`;
+            }
+
+            const { value: form } = await Swal.fire({ 
+                ...swalDark, width: '600px',
+                title: 'تعديل بيانات العضو', 
+                html: `
+                    <input id="st-name-edit" class="login-input" placeholder="الاسم" value="${staffMember.name}">
+                    <input id="st-user-edit" class="login-input" placeholder="اسم الدخول" value="${staffMember.username}">
+                    <input id="st-pass-edit" class="login-input" type="password" placeholder="باسورد جديد (اتركه فارغاً لعدم التغيير)">
+                    ${roleSelectHtml}
+                    <p style="text-align:right; color:#9CA3AF; font-size:12px; margin-bottom:5px;">صلاحيات المواد المسموحة:</p>
+                    ${getGroupedSubjectsHTML(staffMember.allowed_subjects || [])}
+                `, 
+                preConfirm: () => { 
+                    const name = document.getElementById('st-name-edit').value;
+                    const user = document.getElementById('st-user-edit').value;
+                    const pass = document.getElementById('st-pass-edit').value;
+                    let role = staffMember.role; 
+                    if(me.role === 'super_admin') role = document.getElementById('st-role-edit').value;
+                    
+                    const checkedBoxes = document.querySelectorAll('.st-sub-check-edit:checked');
+                    const allowedSubjects = Array.from(checkedBoxes).map(cb => cb.value);
+
+                    if(!name || !user) return Swal.showValidationMessage('الاسم واسم الدخول مطلوبان'); 
+                    
+                    return { 
+                        name: name, 
+                        username: user, 
+                        password: pass,
+                        role: role,
+                        allowed_subjects: allowedSubjects 
+                    }; 
+                } 
+            });
+            
+            if(form) { 
+                Swal.fire({title: 'جاري الحفظ والتحديث...', background: '#1a1f2c', color: '#fff', didOpen: () => Swal.showLoading()});
+                const res = await fetch('/api/admin-action', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action:'manage_staff', sub:'edit', old_username: targetUsername, staff:form}) }); 
+                const data = await res.json(); 
+                if(data.status === 'error') {
+                    Swal.fire({...swalDark, icon: 'error', text: data.message}); 
+                } else {
+                    await refreshData(); 
+                    Swal.fire({...swalDark, icon: 'success', title: 'تم التعديل بنجاح!', timer: 1500, showConfirmButton: false});
                 }
             }
         }
