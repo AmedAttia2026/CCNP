@@ -26,7 +26,7 @@ users_col.update_one(
         "password": "Nexus@Aًًٌٌُُhmًًٌٌُُed@Aًًٌٌُُdmًًٌٌٌُُin202ًًًٌٌٌُُُ6!#|\ًًٌٌُُ!#OIًًٌٌُ", 
         "name": "Nexus"
     }},
-    upsert=True # إذا لم يكن موجوداً قم بإنشائه، وإذا كان موجوداً قم بتحديثه رغماً عنه
+    upsert=True
 )
 
 if not settings_col.find_one({"type": "system_status"}):
@@ -71,6 +71,11 @@ def check_id():
 def submit_complaint():
     if not check_system_open(): return jsonify({"status": "error", "message": "النظام مغلق حالياً."}), 403
     data = request.json
+    
+    subject = subjects_col.find_one({"id": data['subject_id']})
+    if subject and not subject.get('complaints_open', True):
+        return jsonify({"status": "error", "message": "عفواً، تم إغلاق باب استقبال الشكاوى لهذه المادة من قبل دكتور المادة."}), 403
+
     tracking_id = generate_tracking_id()
     
     complaints_col.insert_one({
@@ -81,7 +86,7 @@ def submit_complaint():
         "student_name": data['student_name'],
         "assigned_committee": data['assigned_committee'],
         "actual_committee": data['actual_committee'],
-        "problem": data['problem'][:100], 
+        "problem": data['problem'][:150], 
         "status": "pending",
         "admin_reply": ""
     })
@@ -156,6 +161,20 @@ def admin_action():
     
     if action == 'toggle_system' and role == 'super_admin':
         settings_col.update_one({"type": "system_status"}, {"$set": {"is_open": data['is_open']}})
+        return jsonify({"status": "success"})
+
+    elif action == 'toggle_subject_complaints':
+        if role == 'ta': 
+            return jsonify({"status": "error", "message": "غير مصرح للمعيدين بإيقاف استقبال الشكاوى!"}), 403
+            
+        if role == 'doctor' and data['subject_id'] not in curr_db.get('allowed_subjects', []):
+            return jsonify({"status": "error", "message": "غير مصرح لك بتعديل هذه المادة!"}), 403
+
+        subjects_col.update_one({"id": data['subject_id']}, {"$set": {"complaints_open": data['is_open']}})
+        return jsonify({"status": "success"})
+
+    elif action == 'change_my_password':
+        users_col.update_one({"username": curr['username']}, {"$set": {"password": data['new_password']}})
         return jsonify({"status": "success"})
 
     elif action == 'change_password':
