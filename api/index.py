@@ -12,18 +12,18 @@ MONGO_URI = "mongodb+srv://admin:admin1312312313@aws.rhgcybe.mongodb.net/?appNam
 client = MongoClient(MONGO_URI)
 db = client['university_system']
 
-users_col = db['users']              
-subjects_col = db['subjects']        
-committees_col = db['committees']    
-complaints_col = db['complaints']    
+users_col = db['users']
+subjects_col = db['subjects']
+committees_col = db['committees']
+complaints_col = db['complaints']
 settings_col = db['settings']
 
 # [الحل الجذري]: تحديث إجباري لحساب الآدمن الرئيسي لضمان مسح الباسورد القديم
 users_col.update_one(
     {"role": "super_admin"},
     {"$set": {
-        "username": "|ًٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌُ Nًًًًٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌُُُُexusًٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌُ ًًًٌٌٌُُُ|ًًًًًًًًًًًًًًًًًً|ًًًََََُُُُ 2ًًًًًًًًًًًًًًًًًًًًًًًًًًًٌٌٌُُُ026ًًًًًًًًًًًًًًًًًًًًًًًًًًًًً|!@#$@#$", 
-        "password": "Nexus@Aًًٌٌُُhmًًٌٌُُed@Aًًٌٌُُdmًًٌٌٌُُin202ًًًٌٌٌُُُ6!#|\ًًٌٌُُ!#OIًًٌٌُ", 
+        "username": "|ًٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌُ Nًًًًٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌُُُُexusًٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌُ ًًًٌٌٌُُُ|ًًًًًًًًًًًًًًًًًً|ًًًََََُُُُ 2ًًًًًًًًًًًًًًًًًًًًًًًًًًًٌٌٌُُُ026ًًًًًًًًًًًًًًًًًًًًًًًًًًًًً|!@#$@#$", 
+        "password": "Nexus@Aًًٌٌُُhmًًٌٌُُed@Aًًٌٌُُdmًًٌٌٌُُin202ًًًٌٌٌُُُ6!#|\ًًٌٌُُ!#OIًًٌٌُ", 
         "name": "Nexus"
     }},
     upsert=True
@@ -207,7 +207,21 @@ def admin_action():
                 "ids": clean_ids, "added_by": curr['name']
             })
         elif data['sub'] == 'delete': committees_col.delete_one({"committee_id": data['id']})
-            
+
+    # ------------------ الأوامر الجديدة لمسح اللجان والشكاوى للمادة ------------------
+    elif action == 'wipe_subject_committees':
+        if role != 'super_admin': 
+            return jsonify({"status": "error", "message": "غير مصرح لك بمسح اللجان!"}), 403
+        committees_col.delete_many({"subject_id": data['subject_id']})
+        return jsonify({"status": "success"})
+
+    elif action == 'wipe_subject_complaints':
+        if role != 'super_admin': 
+            return jsonify({"status": "error", "message": "غير مصرح لك بمسح الشكاوى!"}), 403
+        complaints_col.delete_many({"subject_id": data['subject_id'], "status": data['status']})
+        return jsonify({"status": "success"})
+    # ----------------------------------------------------------------------------------
+
     elif action == 'manage_staff':
         if role == 'ta': return jsonify({"status": "error", "message": "المعيد ليس له صلاحية إدارة طاقم"}), 403
         
