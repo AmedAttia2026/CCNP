@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>إدارة الامتحانات | Control Panel</title>
+    <title>لوحة الإدارة | Nexus 2026</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -29,7 +29,7 @@
         .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 999; backdrop-filter: blur(3px); }
 
         .sidebar { width: var(--sidebar-width); background: var(--bg-card); height: 100vh; position: fixed; right: 0; top: 0; border-left: 1px solid var(--border); padding: 25px 0; overflow-y: auto; z-index: 1000; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);}
-        .logo { text-align: center; font-size: 18px; font-weight: 900; color: var(--gold); margin-bottom: 30px; letter-spacing: 1px;}
+        .logo { text-align: center; font-size: 22px; font-weight: 900; color: var(--gold); margin-bottom: 30px; letter-spacing: 1px;}
         .nav-links { list-style: none; padding: 0 10px; }
         .nav-links > li { color: var(--text-muted); font-weight: 700; padding: 10px 15px; font-size: 13px; border-radius: 8px; cursor: pointer; margin-bottom: 4px; display: flex; gap: 12px; align-items: center; transition: 0.3s;}
         .nav-links > li i.icon-main { font-size: 15px; width: 20px; text-align: center;} 
@@ -96,11 +96,13 @@
 
     <div id="login-screen">
         <div class="login-card">
-            <i class="fas fa-user-tie fa-4x" style="color:var(--gold); margin-bottom:20px;"></i>
-            <h2 style="color:#fff; margin-bottom:30px; font-size:22px;">لوحة الإدارة والتوجيه</h2>
+            <i class="fas fa-shield-alt fa-4x" style="color:var(--gold); margin-bottom:15px;"></i>
+            <h2 style="color:var(--gold); margin-bottom:5px; font-size:26px; font-weight:900;">Nexus System</h2>
+            <p style="color:var(--text-muted); font-size:14px; margin-bottom:30px;">لوحة الإدارة والتحكم</p>
+            
             <input type="text" id="user" class="login-input" placeholder="اسم المستخدم">
             <input type="password" id="pass" class="login-input" placeholder="كلمة المرور">
-            <button class="btn btn-gold" style="width:100%; justify-content:center; font-size:16px; padding:12px;" onclick="handleLogin()">دخول للنظام</button>
+            <button class="btn btn-gold" style="width:100%; justify-content:center; font-size:16px; padding:12px;" onclick="handleLogin()">تسجيل الدخول <i class="fas fa-sign-in-alt"></i></button>
         </div>
     </div>
 
@@ -108,7 +110,7 @@
         <div id="mobile-overlay" class="overlay" onclick="toggleSidebar()"></div>
 
         <aside class="sidebar">
-            <div class="logo"><i class="fas fa-crown"></i> Control Panel</div>
+            <div class="logo"><i class="fas fa-crown"></i> Nexus System</div>
             <ul class="nav-links">
                 <li id="tab-subjects" onclick="switchTab('subjects', this)"><i class="fas fa-book icon-main"></i> إدارة المواد</li>
                 
@@ -141,7 +143,7 @@
 
         <main class="main-content">
             <div class="mobile-header">
-                <div class="logo" style="margin-bottom:0; font-size:18px;"><i class="fas fa-crown"></i> لوحة الإدارة</div>
+                <div class="logo" style="margin-bottom:0; font-size:18px;"><i class="fas fa-crown"></i> Nexus System</div>
                 <button class="menu-toggle" onclick="toggleSidebar()"><i class="fas fa-ellipsis-v"></i></button>
             </div>
 
@@ -522,7 +524,6 @@
             `).join('');
         }
 
-        // --- الميزة الجديدة: تعديل اللجنة ---
         async function editCommittee(comId) {
             const com = globalCommittees.find(c => c.committee_id === comId);
             if (!com) return;
