@@ -13,80 +13,118 @@
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Cairo', sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background-color: var(--bg-body); color: #fff; overflow-x: hidden; display: flex; flex-direction: column; min-height: 100vh;}
 
-        /* --- Custom Beautiful Scrollbar --- */
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: var(--bg-body); border-radius: 10px; }
-        ::-webkit-scrollbar-thumb { background: rgba(255, 179, 0, 0.3); border-radius: 10px; transition: 0.3s; }
-        ::-webkit-scrollbar-thumb:hover { background: var(--gold); }
+        /* --- Custom Scrollbar --- */
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: var(--bg-body); }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 179, 0, 0.5); border-radius: 10px; }
 
-        #auth-screen { position: fixed; inset: 0; z-index: 10000; background: #060913; display: flex; justify-content: center; align-items: center; padding: 20px; }
-        .auth-card { background: var(--card-bg); padding: 40px; border-radius: 20px; border: 1px solid var(--border); text-align: center; width: 100%; max-width: 450px; box-shadow: 0 0 40px rgba(0,0,0,0.8); }
+        /* --- Auth Screen --- */
+        #auth-screen { position: fixed; inset: 0; z-index: 10000; background: #060913; display: flex; justify-content: center; align-items: center; padding: 15px; }
+        .auth-card { background: var(--card-bg); padding: 40px 30px; border-radius: 20px; border: 1px solid var(--border); text-align: center; width: 100%; max-width: 450px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
         .auth-input { width: 100%; padding: 15px; margin-bottom: 15px; border-radius: 12px; border: 1px solid var(--border); background: #000; color: #fff; font-size: 15px; outline: none; transition: 0.3s; }
         .auth-input:focus { border-color: var(--gold); }
         
-        .navbar { background: rgba(10, 14, 23, 0.95); backdrop-filter: blur(10px); height: 75px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; border-bottom: 1px solid rgba(255,179,0,0.2); }
+        /* --- Navbar (Desktop Base) --- */
+        .navbar { background: rgba(10, 14, 23, 0.95); backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; height: 75px; border-bottom: 1px solid rgba(255,179,0,0.2); position: sticky; top: 0; z-index: 100; }
         .logo { font-size: 20px; font-weight: 900; color: var(--gold); display: flex; align-items: center; gap: 10px;}
-        
         .nav-actions { display: flex; gap: 10px; }
-        .btn-outline { background: transparent; border: 1px solid var(--gold); color: var(--gold); padding: 8px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s; font-size: 13px;}
-        .btn-outline:hover { background: var(--gold); color: #000; }
-        .btn-danger-outline { background: transparent; border: 1px solid #EF4444; color: #EF4444; padding: 8px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s; font-size: 13px;}
-        .btn-danger-outline:hover { background: #EF4444; color: #fff; }
+        .btn-outline, .btn-danger-outline { padding: 8px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s; font-size: 13px; display: flex; align-items: center; gap: 5px; white-space: nowrap; }
+        .btn-outline { background: transparent; border: 1px solid var(--gold); color: var(--gold); }
+        .btn-outline:active, .btn-outline:hover { background: var(--gold); color: #000; }
+        .btn-danger-outline { background: transparent; border: 1px solid #EF4444; color: #EF4444; }
+        .btn-danger-outline:active, .btn-danger-outline:hover { background: #EF4444; color: #fff; }
 
+        /* --- Main Container --- */
         .container { padding: 30px 20px; max-width: 1200px; margin: auto; flex: 1; width: 100%; display: flex; flex-direction: column;}
         
+        /* --- Student Banner --- */
         .student-info-banner { background: linear-gradient(90deg, rgba(255,179,0,0.1), transparent); border-right: 4px solid var(--gold); padding: 20px; border-radius: 10px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;}
         .info-block { display: flex; flex-direction: column; gap: 5px;}
 
+        /* --- Grid & Subject Cards (Desktop Base) --- */
         .grid-layout { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; margin-top: 20px;}
-        
         .subject-card { background: linear-gradient(145deg, #161b26, #0d1117); border-radius: 20px; padding: 30px; border: 1px solid rgba(255,179,0,0.2); cursor: pointer; transition: 0.3s; box-shadow: 0 5px 15px rgba(0,0,0,0.5); display: flex; flex-direction: column; align-items: center; text-align: center;}
-        .subject-card:hover { transform: translateY(-8px); border-color: var(--gold); box-shadow: 0 10px 30px rgba(255,179,0,0.2); }
+        .subject-card:active, .subject-card:hover { transform: translateY(-5px); border-color: var(--gold); }
         .subject-card img { width: 110px; height: 110px; object-fit: contain; margin-bottom: 20px; filter: drop-shadow(0 5px 10px rgba(255,179,0,0.3));}
+        
+        .sub-title { font-size: 22px; font-weight: 900; color: var(--gold); margin-bottom: 10px; line-height: 1.3; }
+        .sub-badge { font-size: 12px; font-weight: bold; background: rgba(255,255,255,0.05); padding: 4px 10px; border-radius: 8px; display: inline-block; }
 
         .empty-state { text-align: center; padding: 50px 20px; color: var(--text-muted); }
-        footer { text-align: center; padding: 30px 20px; background: #0a0e17; border-top: 1px solid rgba(255,255,255,0.05); margin-top: auto;}
+        footer { text-align: center; padding: 20px 15px; background: #0a0e17; border-top: 1px solid rgba(255,255,255,0.05); margin-top: auto;}
 
         /* --- Wizard Screen --- */
         .wizard-screen { position: fixed; inset: 0; background: rgba(10, 14, 23, 0.98); z-index: 10000; display: none; flex-direction: column; }
-        .wizard-header { padding: 20px; background: var(--card-bg); border-bottom: 1px solid rgba(255,179,0,0.3); display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.5); z-index: 2;}
-        .wizard-close { background: none; border: none; color: #EF4444; font-size: 24px; cursor: pointer; transition: 0.3s; }
-        .wizard-close:hover { transform: scale(1.1); }
+        .wizard-header { padding: 15px 20px; background: var(--card-bg); border-bottom: 1px solid rgba(255,179,0,0.3); display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.5); z-index: 2;}
+        .wizard-close { background: none; border: none; color: #EF4444; font-size: 22px; cursor: pointer; padding: 5px; }
         
-        .wizard-body { flex: 1; overflow-y: auto; display: flex; flex-direction: column; padding: 20px; }
-        .wizard-card { margin: auto; background: var(--card-bg); width: 100%; max-width: 500px; padding: 30px; border-radius: 20px; border: 1px solid rgba(255,179,0,0.3); box-shadow: 0 10px 40px rgba(0,0,0,0.8); }
+        .wizard-body { flex: 1; overflow-y: auto; display: flex; flex-direction: column; padding: 15px; }
+        .wizard-card { margin: auto; background: var(--card-bg); width: 100%; max-width: 500px; padding: 25px; border-radius: 20px; border: 1px solid rgba(255,179,0,0.3); box-shadow: 0 5px 20px rgba(0,0,0,0.8); }
         
-        .wizard-step { display: none; animation: fadeInRight 0.4s ease-out; }
+        .wizard-step { display: none; animation: fadeInRight 0.3s ease-out; }
         .wizard-step.active { display: block; }
-        @keyframes fadeInRight { from { opacity: 0; transform: translateX(30px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes fadeInRight { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
 
-        .input-dark { width: 100%; padding: 15px; border-radius: 12px; border: 1px solid #4a5568; background: #0d1117; color: #fff; font-size: 15px; outline: none; transition: 0.3s; margin-bottom: 20px;}
-        .input-dark:focus { border-color: var(--gold); box-shadow: 0 0 10px rgba(255,179,0,0.2); }
+        .input-dark { width: 100%; padding: 15px; border-radius: 12px; border: 1px solid #4a5568; background: #0d1117; color: #fff; font-size: 14px; outline: none; transition: 0.3s; margin-bottom: 15px;}
+        .input-dark:focus { border-color: var(--gold); }
         
-        .hint-box { background: rgba(16, 185, 129, 0.1); border: 1px dashed #10B981; padding: 15px; border-radius: 12px; margin-bottom: 20px; text-align: center; }
+        .hint-box { background: rgba(16, 185, 129, 0.1); border: 1px dashed #10B981; padding: 15px; border-radius: 12px; margin-bottom: 15px; text-align: center; }
         
-        .radio-group { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; text-align: right; }
-        .radio-label { background: #0d1117; border: 1px solid #4a5568; padding: 15px; border-radius: 12px; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: 0.3s; }
+        .radio-group { display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px; text-align: right; }
+        .radio-label { background: #0d1117; border: 1px solid #4a5568; padding: 15px; border-radius: 12px; cursor: pointer; display: flex; align-items: center; gap: 10px; font-size: 15px; transition: 0.3s;}
         .radio-label:hover { border-color: var(--gold); }
         .radio-label input[type="radio"] { accent-color: var(--gold); transform: scale(1.2); }
         
-        .wizard-btns { display: flex; gap: 15px; margin-top: 10px; }
-        .btn-primary { background: linear-gradient(90deg, #FFB300, #FFD54F); color: #000; border: none; flex: 1; padding: 15px; border-radius: 12px; font-size: 16px; font-weight: 900; cursor: pointer; transition: 0.3s; }
-        .btn-secondary { background: transparent; color: #fff; border: 1px solid #4a5568; padding: 15px 25px; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .wizard-btns { display: flex; gap: 10px; margin-top: 15px; }
+        .btn-primary { background: linear-gradient(90deg, #FFB300, #FFD54F); color: #000; border: none; flex: 1; padding: 15px; border-radius: 12px; font-size: 16px; font-weight: 900; cursor: pointer; box-shadow: 0 4px 10px rgba(255, 179, 0, 0.2); }
+        .btn-secondary { background: transparent; color: #fff; border: 1px solid #4a5568; padding: 15px; border-radius: 12px; font-size: 15px; font-weight: bold; cursor: pointer; flex: 1; text-align: center; }
         
-        .char-counter { text-align: left; font-size: 12px; color: var(--text-muted); margin-top: -15px; margin-bottom: 20px; font-family: monospace;}
-        .tracking-code { background: #000; padding: 20px; border-radius: 15px; border: 2px dashed var(--gold); color: var(--gold); font-size: 32px; font-family: monospace; font-weight: 900; letter-spacing: 5px; margin: 20px 0; display: inline-block;}
+        .char-counter { text-align: left; font-size: 12px; color: var(--text-muted); margin-top: -10px; margin-bottom: 15px; font-family: monospace;}
+        .tracking-code { background: #000; padding: 15px; border-radius: 12px; border: 2px dashed var(--gold); color: var(--gold); font-size: clamp(20px, 6vw, 32px); font-family: monospace; font-weight: 900; letter-spacing: 3px; margin: 15px 0; display: inline-block; word-break: break-all;}
         
-        .swal2-popup { border-radius: 20px !important; background: #1a1f2c !important; color: #fff !important; }
+        .swal2-popup { border-radius: 16px !important; background: #1a1f2c !important; color: #fff !important; width: 90% !important; max-width: 400px !important; padding: 20px !important; }
         
         #loading-screen { display:none; position: fixed; inset: 0; background: rgba(6, 9, 19, 0.9); z-index: 9999; justify-content: center; align-items: center; flex-direction: column; }
-        .loader { border: 4px solid rgba(255, 179, 0, 0.3); border-top: 4px solid var(--gold); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin-bottom: 15px;}
+        .loader { border: 4px solid rgba(255, 179, 0, 0.2); border-top: 4px solid var(--gold); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin-bottom: 15px;}
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
+        /* =========================================================
+           📱 الهواتف المحمولة (Mobile Optimization)
+           ========================================================= */
         @media (max-width: 768px) {
-            .student-info-banner { flex-direction: column; align-items: flex-start; }
-            .navbar { height: auto; padding: 15px 20px; flex-direction: column; gap: 15px;}
-            .btn-outline, .btn-danger-outline { width: 100%; text-align: center;}
+            /* 1. Navbar: على سطر واحد مع تصغير الخطوط بدل الهبوط للأسفل */
+            .navbar { height: 60px; padding: 0 10px; }
+            .logo { font-size: 15px; gap: 5px; }
+            .nav-actions { gap: 6px; }
+            .btn-outline, .btn-danger-outline { padding: 6px 8px; font-size: 11px; }
+
+            .container { padding: 20px 15px; }
+            
+            /* 2. Banner: تظبيط مقاسات البانر الترحيبي */
+            .student-info-banner { padding: 15px; flex-direction: column; align-items: flex-start; gap: 10px; }
+            #display-name { font-size: 16px !important; }
+            
+            /* 3. Grid: مادتين (مربعين) جنب بعض وتصغير المحتوى */
+            .grid-layout { grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 15px; }
+            
+            .subject-card { padding: 15px 10px; border-radius: 15px; }
+            .subject-card img { width: 55px; height: 55px; margin-bottom: 10px; }
+            
+            .sub-title { font-size: 13px; margin-bottom: 8px; }
+            .sub-badge { font-size: 10px; padding: 3px 6px; }
+
+            .container h2 { font-size: 18px !important; }
+            .container p { font-size: 12px !important; }
+
+            /* Wizard Buttons: الزرار الأساسي يكون فوق في الشاشات الصغيرة لتسهيل اللمس */
+            .wizard-btns { flex-direction: column-reverse; gap: 8px; }
+            .btn-primary, .btn-secondary { width: 100%; font-size: 14px; padding: 12px; }
+        }
+        
+        /* شاشات الموبايل الصغيرة جداً (مثل آيفون SE) لتفادي أي قص في الكلمات */
+        @media (max-width: 350px) {
+            .logo span { display: none; } /* إخفاء كلمة System في اللوجو لتوفير مساحة */
+            .btn-outline, .btn-danger-outline { font-size: 10px; padding: 5px 6px; }
         }
     </style>
 </head>
@@ -94,9 +132,9 @@
 
     <div id="auth-screen">
         <div class="auth-card">
-            <i class="fas fa-chalkboard-teacher fa-3x" style="color:var(--gold); margin-bottom:20px;"></i>
-            <h2 style="color:#fff; margin-bottom:10px; font-size:24px;">بوابة الطلاب</h2>
-            <p style="color:var(--text-muted); font-size:14px; margin-bottom:25px;">قم بتسجيل بياناتك لمرة واحدة ليتم حفظها بجهازك</p>
+            <i class="fas fa-chalkboard-teacher fa-3x" style="color:var(--gold); margin-bottom:15px;"></i>
+            <h2 style="color:#fff; margin-bottom:8px; font-size:22px;">بوابة الطلاب</h2>
+            <p style="color:var(--text-muted); font-size:13px; margin-bottom:20px;">قم بتسجيل بياناتك لمرة واحدة ليتم حفظها بجهازك</p>
             
             <input type="text" id="reg-name" class="auth-input" placeholder="الاسم الأول">
             <input type="number" id="reg-id" class="auth-input" placeholder="رقم الـ ID (7 أرقام)">
@@ -113,21 +151,21 @@
                 <option value="عام (IT)">عام (IT)</option>
             </select>
 
-            <button class="btn-primary" style="width:100%;" onclick="saveStudentData()">دخول وحفظ البيانات <i class="fas fa-sign-in-alt"></i></button>
+            <button class="btn-primary" style="width:100%; margin-top: 5px;" onclick="saveStudentData()">دخول وحفظ البيانات <i class="fas fa-sign-in-alt"></i></button>
         </div>
     </div>
 
     <div id="loading-screen">
         <div class="loader"></div>
-        <h3 id="loading-text" style="color:var(--gold);">جاري التحميل...</h3>
+        <h3 id="loading-text" style="color:var(--gold); font-size: 16px;">جاري التحميل...</h3>
     </div>
 
     <div id="main-ui" style="display: none; flex-direction: column; min-height: 100vh;">
         <nav class="navbar">
-            <div class="logo"><i class="fas fa-university"></i> Nexus System</div>
+            <div class="logo"><i class="fas fa-university"></i> <span>Nexus 2026</span></div>
             <div class="nav-actions">
-                <button class="btn-outline" onclick="openTrackModal()"><i class="fas fa-search"></i> تتبع شكوى سابقة</button>
-                <button class="btn-danger-outline" onclick="logoutStudent()"><i class="fas fa-sign-out-alt"></i> تسجيل خروج</button>
+                <button class="btn-outline" onclick="openTrackModal()"><i class="fas fa-search"></i> تتبع شكوى</button>
+                <button class="btn-danger-outline" onclick="logoutStudent()"><i class="fas fa-sign-out-alt"></i> خروج</button>
             </div>
         </nav>
 
@@ -137,43 +175,43 @@
                     <span style="color:var(--text-muted); font-size:12px;">مرحباً بك</span>
                     <strong id="display-name" style="font-size:20px; color:var(--gold);">...</strong>
                 </div>
-                <div class="info-block" style="text-align: left;">
+                <div class="info-block" style="text-align: right;">
                     <span style="color:var(--text-muted); font-size:12px;">رقم الـ ID: <b id="display-id" style="color:#fff; font-family:monospace; font-size:14px;">...</b></span>
                     <span style="color:var(--text-muted); font-size:12px;"><b id="display-academic" style="color:#10B981;">...</b></span>
                 </div>
             </div>
 
-            <h2 style="font-size:24px; font-weight:900; margin-bottom:5px; display:flex; align-items:center; gap:10px;"><i class="fas fa-book-open" style="color:var(--gold);"></i> المقررات الدراسية الخاصة بك</h2>
-            <p style="color:var(--text-muted); font-size:15px; margin-bottom: 20px;">اضغط على المادة لمعرفة لجنتك الامتحانية أو تقديم شكوى مباشرة.</p>
+            <h2 style="font-size:24px; font-weight:900; margin-bottom:5px; display:flex; align-items:center; gap:8px;"><i class="fas fa-book-open" style="color:var(--gold);"></i> المقررات الدراسية</h2>
+            <p style="color:var(--text-muted); font-size:15px; margin-bottom: 10px;">اضغط على المادة لمعرفة لجنتك أو تقديم شكوى.</p>
             
             <div id="subjects-container" class="grid-layout"></div>
         </div>
 
         <footer>
-            <h2 style="color: var(--gold); font-weight: 900; font-size: 24px;">Nexus 2026</h2>
+            <h2 style="color: var(--gold); font-weight: 900; font-size: 20px;">Nexus 2026</h2>
         </footer>
     </div>
 
     <div id="wizard-screen" class="wizard-screen">
         <div class="wizard-header">
-            <h2 style="color:var(--gold); font-size:18px;"><i class="fas fa-exclamation-circle"></i> مركز تسجيل الشكاوى</h2>
+            <h2 style="color:var(--gold); font-size:16px;"><i class="fas fa-exclamation-circle"></i> تسجيل شكوى</h2>
             <button class="wizard-close" onclick="closeWizard()"><i class="fas fa-times"></i></button>
         </div>
         
         <div class="wizard-body">
             <div class="wizard-card">
                 <div id="step-1" class="wizard-step active">
-                    <h2 id="wiz-dynamic-title" style="color:var(--gold); text-align:center; margin-bottom:20px; font-weight:900;"></h2>
+                    <h2 id="wiz-dynamic-title" style="color:var(--gold); text-align:center; margin-bottom:15px; font-weight:900; font-size: 18px;"></h2>
                     
-                    <div style="background:rgba(255,255,255,0.05); padding:15px; border-radius:12px; margin-bottom:20px; border:1px solid var(--border);">
+                    <div style="background:rgba(255,255,255,0.05); padding:12px; border-radius:10px; margin-bottom:15px; border:1px solid var(--border);">
                         <p style="color:var(--text-muted); font-size:12px;">مقدم الشكوى:</p>
-                        <h4 id="wiz-readonly-name" style="color:#fff; margin-bottom:5px;"></h4>
+                        <h4 id="wiz-readonly-name" style="color:#fff; margin-bottom:3px; font-size: 15px;"></h4>
                         <p style="color:var(--gold); font-family:monospace; font-size:14px; font-weight:bold;" id="wiz-readonly-id"></p>
                     </div>
                     
                     <div class="hint-box">
-                        <p style="color:#10B981; font-size:14px; margin-bottom:5px;">اللجنة المسجلة لك بالنظام هي:</p>
-                        <h3 id="wiz-assigned-com" style="color:#fff; font-weight:900; font-size: 22px;">-</h3>
+                        <p style="color:#10B981; font-size:13px; margin-bottom:5px;">اللجنة المسجلة لك بالنظام هي:</p>
+                        <h3 id="wiz-assigned-com" style="color:#fff; font-weight:900; font-size: clamp(18px, 5vw, 24px);">-</h3>
                     </div>
 
                     <div class="radio-group">
@@ -190,16 +228,16 @@
                 </div>
 
                 <div id="step-2" class="wizard-step">
-                    <h2 style="color:#fff; text-align:center; margin-bottom:20px;">تفاصيل الشكوى</h2>
-                    <p style="text-align:right; color:var(--gold); font-size:14px; margin-bottom:10px;">المادة: <span id="wiz-sub-name" style="color:#fff;"></span></p>
+                    <h2 style="color:#fff; text-align:center; margin-bottom:15px; font-size: 18px;">تفاصيل الشكوى</h2>
+                    <p style="text-align:right; color:var(--gold); font-size:13px; margin-bottom:8px;">المادة: <span id="wiz-sub-name" style="color:#fff;"></span></p>
                     <p style="text-align:right; color:var(--text-muted); font-size:13px; margin-bottom:10px;">اكتب مشكلتك باختصار (بحد أقصى 100 حرف):</p>
                     
-                    <textarea id="wiz-prob" class="input-dark" style="height:120px; resize:none;" maxlength="100" oninput="updateCharCount()" placeholder="مثال: لم أجد درجاتي مسجلة في الميدتيرم..."></textarea>
+                    <textarea id="wiz-prob" class="input-dark" style="height:100px; resize:none;" maxlength="100" oninput="updateCharCount()" placeholder="مثال: لم أجد درجاتي مسجلة في الميدتيرم..."></textarea>
                     <div class="char-counter" id="char-count">0 / 100</div>
 
                     <div class="wizard-btns">
-                        <button class="btn-secondary" onclick="goToStep1()"><i class="fas fa-arrow-right"></i> رجوع</button>
                         <button class="btn-primary" onclick="submitWizard()">إرسال الشكوى <i class="fas fa-paper-plane"></i></button>
+                        <button class="btn-secondary" onclick="goToStep1()"><i class="fas fa-arrow-right"></i> رجوع</button>
                     </div>
                 </div>
             </div>
@@ -209,7 +247,6 @@
     <script>
         let currentSubId, currentSubName, currentAssignedCom;
 
-        // القوائم المنسدلة للتسجيل
         document.getElementById('reg-year').addEventListener('change', function(e) {
             const deptSelect = document.getElementById('reg-dept');
             if (e.target.value === 'الفرقة الثالثة' || e.target.value === 'الفرقة الرابعة') {
@@ -219,7 +256,6 @@
             }
         });
 
-        // التحقق من الجلسة عند التحميل
         window.onload = () => {
             const savedID = localStorage.getItem('drselem_student_id');
             if (savedID) {
@@ -229,7 +265,6 @@
             }
         };
 
-        // حفظ البيانات عند التسجيل
         function saveStudentData() {
             const stName = document.getElementById('reg-name').value.trim();
             const stId = document.getElementById('reg-id').value.trim();
@@ -251,10 +286,9 @@
             initDashboard();
         }
 
-        // تسجيل الخروج
         function logoutStudent() {
             Swal.fire({
-                title: 'تسجيل الخروج', text: "هل أنت متأكد من تسجيل الخروج ومسح بياناتك من المتصفح؟", icon: 'warning', background: '#1a1f2c', color: '#fff', showCancelButton: true, confirmButtonColor: '#EF4444', confirmButtonText: 'نعم، خروج', cancelButtonText: 'إلغاء'
+                title: 'تسجيل الخروج', text: "هل أنت متأكد من مسح بياناتك؟", icon: 'warning', background: '#1a1f2c', color: '#fff', showCancelButton: true, confirmButtonColor: '#EF4444', confirmButtonText: 'نعم، خروج', cancelButtonText: 'إلغاء'
             }).then((result) => {
                 if (result.isConfirmed) {
                     localStorage.clear();
@@ -263,7 +297,6 @@
             });
         }
 
-        // --- عرض المواد المخصصة للطالب بناءً على فرقته وقسمه (والمواد العامة لفرقته) ---
         async function initDashboard() {
             const stYear = (localStorage.getItem('drselem_student_year') || '').trim();
             const stDept = (localStorage.getItem('drselem_student_dept') || '').trim();
@@ -283,7 +316,6 @@
                     return Swal.fire({icon: 'error', text: data.message, background:'#1a1f2c', color:'#fff'});
                 }
 
-                // الفلترة الذكية: يطابق الفرقة، ويجلب مواد القسم المحدد + مواد "عام (IT)" للفرقة نفسها
                 const validSubjects = data.subjects.filter(sub => {
                     const subYear = (sub.year || '').trim();
                     const subDept = (sub.department || '').trim();
@@ -298,13 +330,12 @@
                 if (validSubjects.length === 0) {
                     container.innerHTML = `
                         <div class="empty-state">
-                            <i class="fas fa-folder-open fa-4x" style="color:var(--border); margin-bottom:15px;"></i>
-                            <h3 style="color:#fff;">لا توجد مواد متاحة</h3>
-                            <p style="font-size:14px; margin-top:10px;">لم يتم إضافة أي مقررات تخص فرقتك حتى الآن.</p>
+                            <i class="fas fa-folder-open fa-3x" style="color:var(--border); margin-bottom:15px;"></i>
+                            <h3 style="color:#fff; font-size:16px;">لا توجد مواد متاحة</h3>
+                            <p style="font-size:13px; margin-top:5px;">لم يتم إضافة أي مقررات تخص فرقتك حتى الآن.</p>
                         </div>
                     `;
                 } else {
-                    // عرض البطاقات بشكل جمالي
                     container.innerHTML = validSubjects.map(sub => {
                         let badgeColor = '#3B82F6'; 
                         if(sub.department === 'Software') badgeColor = '#10B981';
@@ -315,21 +346,20 @@
                         return `
                         <div class="subject-card" onclick="checkMyID('${sub.id}', '${sub.name}')">
                             <img src="${sub.image}" alt="subject">
-                            <h2 style="font-size:22px; font-weight:900; color:var(--gold); margin-bottom:10px;">${sub.name}</h2>
-                            <span style="color:${badgeColor}; font-size:12px; font-weight:bold; background:rgba(255,255,255,0.05); padding:4px 10px; border-radius:8px;">${sub.year}${deptLabel}</span>
+                            <h2 class="sub-title">${sub.name}</h2>
+                            <span class="sub-badge" style="color:${badgeColor};">${sub.year}${deptLabel}</span>
                         </div>
                     `}).join('');
                 }
             } catch (error) {
                 document.getElementById('loading-screen').style.display = 'none';
-                Swal.fire({icon: 'error', text: 'حدث خطأ في الاتصال بالسيرفر.', background:'#1a1f2c', color:'#fff'});
+                Swal.fire({icon: 'error', text: 'حدث خطأ في الاتصال.', background:'#1a1f2c', color:'#fff'});
             }
         }
 
-        // --- البحث عن الـ ID في المادة المطلوبة للتحقق قبل فتح الشكوى ---
         async function checkMyID(subId, subName) {
             const stId = localStorage.getItem('drselem_student_id');
-            Swal.fire({title: 'جاري البحث عن لجنتك...', background:'#1a1f2c', color:'#fff', didOpen: () => Swal.showLoading()});
+            Swal.fire({title: 'جاري البحث...', background:'#1a1f2c', color:'#fff', didOpen: () => Swal.showLoading()});
             
             try {
                 const res = await fetch('/api/check-id', { 
@@ -341,27 +371,24 @@
 
                 if (data.status === 'success') {
                     Swal.fire({
-                        html: `<i class="fas fa-check-circle fa-4x" style="color:#10B981; margin-bottom:15px;"></i><h2 style="color:var(--gold); font-weight:bold;">${subName}</h2><div style="background:rgba(16, 185, 129, 0.1); padding:20px; border-radius:15px; border:1px solid #10B981; margin:20px 0;"><p style="color:#10B981; font-size:14px; margin-bottom:5px;">مكان لجنتك هو:</p><h2 style="color:#fff; font-weight:900; font-size:28px;">${data.committee_name}</h2></div>`,
-                        background: '#1a1f2c', showDenyButton: true, confirmButtonColor: '#FFB300', confirmButtonText: 'حسناً، شكراً', denyButtonColor: '#EF4444', denyButtonText: 'لدي مشكلة (شكوى)'
+                        html: `<i class="fas fa-check-circle fa-3x" style="color:#10B981; margin-bottom:15px;"></i><h2 style="color:var(--gold); font-weight:bold; font-size:18px;">${subName}</h2><div style="background:rgba(16, 185, 129, 0.1); padding:15px; border-radius:12px; border:1px solid #10B981; margin:15px 0;"><p style="color:#10B981; font-size:13px; margin-bottom:5px;">مكان لجنتك هو:</p><h2 style="color:#fff; font-weight:900; font-size:clamp(20px, 6vw, 26px); line-height:1.4;">${data.committee_name}</h2></div>`,
+                        background: '#1a1f2c', showDenyButton: true, confirmButtonColor: '#FFB300', confirmButtonText: 'حسناً، شكراً', denyButtonColor: '#EF4444', denyButtonText: 'لدي مشكلة'
                     }).then((result) => {
-                        // السماح بتقديم الشكوى فقط إذا كان مسجلاً في لجنة
                         if (result.isDenied) openWizard(subId, subName, data.committee_name);
                     });
                 } else {
-                    // منع تقديم الشكوى إذا لم يكن مدرجاً في أي لجنة لهذه المادة
                     Swal.fire({
                         icon: 'error', 
                         title: 'عفواً', 
-                        html: `<p style="line-height:1.6;">رقمك <b style="color:var(--gold); font-family:monospace; font-size:16px;">(${stId})</b> غير مسجل في أي لجنة لهذه المادة.<br><span style="font-size:13px; color:var(--text-muted);">يرجى مراجعة إدارة الامتحانات أو الكنترول ولا يمكنك تقديم شكوى.</span></p>`, 
+                        html: `<p style="line-height:1.6; font-size:14px;">رقمك <b style="color:var(--gold); font-family:monospace;">(${stId})</b> غير مسجل في أي لجنة لهذه المادة.<br><span style="font-size:12px; color:var(--text-muted);">يرجى مراجعة الكنترول.</span></p>`, 
                         background:'#1a1f2c', color:'#fff', confirmButtonColor: '#EF4444'
                     });
                 }
             } catch(e) {
-                Swal.fire({icon: 'error', text: 'حدث خطأ بالشبكة، يرجى المحاولة مرة أخرى.', background:'#1a1f2c', color:'#fff'});
+                Swal.fire({icon: 'error', text: 'حدث خطأ بالشبكة.', background:'#1a1f2c', color:'#fff'});
             }
         }
 
-        // --- Wizard Logic (تقديم الشكوى) ---
         function openWizard(subId, subName, comName) {
             currentSubId = subId; currentSubName = subName; currentAssignedCom = comName;
             
@@ -384,7 +411,7 @@
         function goToStep2() {
             const isOther = document.querySelectorAll('input[name="loc"]')[1].checked;
             const actualLoc = document.getElementById('wiz-actual-com').value;
-            if(isOther && !actualLoc) return Swal.fire({icon: 'warning', text: 'يرجى كتابة المكان الفعلي الذي امتحنت فيه!', background:'#1a1f2c', color:'#fff'});
+            if(isOther && !actualLoc) return Swal.fire({icon: 'warning', text: 'يرجى كتابة المكان الفعلي!', background:'#1a1f2c', color:'#fff'});
             document.getElementById('step-1').classList.remove('active'); document.getElementById('step-2').classList.add('active');
         }
 
@@ -398,7 +425,7 @@
             const prob = document.getElementById('wiz-prob').value;
             const actualCom = document.querySelectorAll('input[name="loc"]')[1].checked ? document.getElementById('wiz-actual-com').value : currentAssignedCom;
             
-            if(!prob) return Swal.fire({icon: 'warning', text: 'يرجى كتابة تفاصيل الشكوى أولاً.', background:'#1a1f2c', color:'#fff'});
+            if(!prob) return Swal.fire({icon: 'warning', text: 'يرجى كتابة الشكوى أولاً.', background:'#1a1f2c', color:'#fff'});
 
             Swal.fire({title: 'جاري الإرسال...', background:'#1a1f2c', color:'#fff', didOpen: () => Swal.showLoading()});
             
@@ -416,7 +443,7 @@
                 
                 if(data.status === 'success') {
                     closeWizard();
-                    Swal.fire({ html: `<i class="fas fa-shield-check fa-4x" style="color:var(--gold); margin-bottom:15px;"></i><h2 style="color:#fff;">تم استلام شكواك</h2><div class="tracking-code">${data.tracking_id}</div><p style="color:#EF4444; font-size:14px;">احتفظ بهذا الكود وتأكد من نسخه لتتبع رد الإدارة.</p>`, background: '#1a1f2c', confirmButtonColor: '#FFB300', confirmButtonText: 'تم النسخ' });
+                    Swal.fire({ html: `<i class="fas fa-shield-check fa-3x" style="color:var(--gold); margin-bottom:10px;"></i><h2 style="color:#fff; font-size:20px;">تم استلام شكواك</h2><div class="tracking-code">${data.tracking_id}</div><p style="color:#EF4444; font-size:12px;">احتفظ بهذا الكود لتتبع رد الإدارة.</p>`, background: '#1a1f2c', confirmButtonColor: '#FFB300', confirmButtonText: 'تم النسخ' });
                 } else {
                     Swal.fire({icon: 'error', text: data.message, background:'#1a1f2c', color:'#fff'});
                 }
@@ -436,13 +463,13 @@
                     const c = data.complaint;
                     let statusHtml = '';
                     if(c.status === 'resolved') {
-                        statusHtml = `<div style="background:rgba(16,185,129,0.1); border:1px solid #10B981; padding:15px; border-radius:10px; margin-top:20px; text-align:right;"><p style="color:#10B981; font-weight:bold;"><i class="fas fa-check-double"></i> رد الإدارة (${c.replied_by}):</p><p style="color:#fff;">${c.admin_reply}</p></div>`;
+                        statusHtml = `<div style="background:rgba(16,185,129,0.1); border:1px solid #10B981; padding:12px; border-radius:10px; margin-top:15px; text-align:right;"><p style="color:#10B981; font-weight:bold; font-size:13px;"><i class="fas fa-check-double"></i> رد الإدارة (${c.replied_by}):</p><p style="color:#fff; font-size:13px; margin-top:5px;">${c.admin_reply}</p></div>`;
                     } else if(c.status === 'spam') {
-                        statusHtml = `<div style="background:rgba(239,68,68,0.1); border:1px dashed #EF4444; padding:15px; border-radius:10px; margin-top:20px; color:#EF4444;"><i class="fas fa-ban"></i> عذراً، تم رفض هذه الشكوى لعدم الجدية أو لمحتوى غير لائق.</div>`;
+                        statusHtml = `<div style="background:rgba(239,68,68,0.1); border:1px dashed #EF4444; padding:12px; border-radius:10px; margin-top:15px; color:#EF4444; font-size:13px;"><i class="fas fa-ban"></i> عذراً، تم الرفض.</div>`;
                     } else {
-                        statusHtml = `<div style="background:rgba(255,179,0,0.1); border:1px dashed var(--gold); padding:15px; border-radius:10px; margin-top:20px; color:var(--gold);"><i class="fas fa-clock"></i> قيد المراجعة لدى الإدارة.</div>`;
+                        statusHtml = `<div style="background:rgba(255,179,0,0.1); border:1px dashed var(--gold); padding:12px; border-radius:10px; margin-top:15px; color:var(--gold); font-size:13px;"><i class="fas fa-clock"></i> قيد المراجعة.</div>`;
                     }
-                    Swal.fire({ title: `الشكوى: ${c.subject_name}`, html: `<div style="text-align:right; font-size:14px; color:#E5E7EB;"><p><strong style="color:var(--text-muted);">الشكوى التي قدمتها:</strong> ${c.problem}</p></div>${statusHtml}`, background: '#1a1f2c', color: '#fff', confirmButtonColor: '#FFB300' });
+                    Swal.fire({ title: `${c.subject_name}`, html: `<div style="text-align:right; font-size:13px; color:#E5E7EB;"><p><strong style="color:var(--text-muted);">الشكوى:</strong> <br>${c.problem}</p></div>${statusHtml}`, background: '#1a1f2c', color: '#fff', confirmButtonColor: '#FFB300', confirmButtonText: 'إغلاق' });
                 } else {
                     Swal.fire({icon: 'error', title: 'عفواً', text: data.message, background: '#1a1f2c', color: '#fff'});
                 }
