@@ -55,32 +55,9 @@
         .mobile-header { display: none; background: var(--bg-card); padding: 15px 20px; border-radius: 15px; margin-bottom: 20px; border: 1px solid var(--border); justify-content: space-between; align-items: center; box-shadow: 0 5px 15px rgba(0,0,0,0.3);}
         .menu-toggle { background: transparent; border: none; color: var(--gold); font-size: 24px; cursor: pointer; padding: 0 10px;}
 
-        .committee-filters { 
-            display: flex; 
-            gap: 10px; 
-            overflow-x: auto; 
-            padding-bottom: 10px; 
-            margin-bottom: 15px; 
-            border-bottom: 1px solid var(--border); 
-            scrollbar-width: none; 
-            -webkit-overflow-scrolling: touch;
-            flex-wrap: nowrap;
-            max-width: 100%;
-        }
+        .committee-filters { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 15px; border-bottom: 1px solid var(--border); scrollbar-width: none; -webkit-overflow-scrolling: touch; flex-wrap: nowrap; max-width: 100%;}
         .committee-filters::-webkit-scrollbar { display: none; }
-        .com-btn { 
-            background: var(--bg-card); 
-            border: 1px solid var(--border); 
-            color: var(--text-muted); 
-            padding: 8px 15px; 
-            border-radius: 20px; 
-            font-size: 13px; 
-            font-weight: bold; 
-            cursor: pointer; 
-            transition: 0.3s; 
-            white-space: nowrap; 
-            flex-shrink: 0; 
-        }
+        .com-btn { background: var(--bg-card); border: 1px solid var(--border); color: var(--text-muted); padding: 8px 15px; border-radius: 20px; font-size: 13px; font-weight: bold; cursor: pointer; transition: 0.3s; white-space: nowrap; flex-shrink: 0; }
         .com-btn:hover { border-color: var(--gold); color: #fff; }
         .com-btn.active { background: rgba(16, 185, 129, 0.1); border-color: #10B981; color: #10B981; }
 
@@ -155,9 +132,7 @@
                 
                 <hr style="border:0; border-top:1px solid var(--border); margin:15px 10px;">
 
-                <li class="super-only" onclick="toggleSystem()" id="toggle-sys-btn" style="transition:0.3s; margin-bottom:5px;"></li>
-
-                <li id="tab-staff" onclick="switchTab('staff', this)"><i id="staff-icon" class="fas fa-users-cog icon-main"></i> <span id="staff-tab-text">إدارة الطاقم</span></li>
+                <li id="tab-staff" onclick="switchTab('staff', this)" class="staff-manager-only"><i class="fas fa-users-cog icon-main"></i> إدارة الطاقم</li>
 
                 <li class="wipe-btn-li super-only" onclick="wipeDatabase()"><i class="fas fa-dumpster-fire icon-main"></i> مسح الداتابيز بالكامل</li>
                 <li style="color:#EF4444; margin-top:5px;" onclick="location.href='/logout-gateway-vip-x9v2-pL7q-2026'"><i class="fas fa-power-off icon-main"></i> تسجيل خروج</li>
@@ -198,9 +173,9 @@
             </div>
 
             <div id="committees" class="content-section">
-                <h3 id="committees-title" style="color:var(--gold); margin-bottom:10px; font-size:16px;"><i class="fas fa-layer-group"></i> قوائم اللجان</h3>
-                <button class="btn btn-gold" onclick="addCommittee()"><i class="fas fa-paste"></i> لصق وإنشاء لجنة للطلاب</button>
-                <div class="table-container">
+                <div id="committees-title" style="margin-bottom:10px;"></div>
+                <button class="btn btn-gold" style="margin-bottom: 10px;" onclick="addCommittee()"><i class="fas fa-paste"></i> لصق وإنشاء لجنة للطلاب</button>
+                <div class="table-container" style="margin-top:0;">
                     <table>
                         <thead><tr><th>اللجنة / المدرج</th><th>عدد الطلاب</th><th>بواسطة</th><th>إجراء</th></tr></thead>
                         <tbody id="committees-list"></tbody>
@@ -209,7 +184,7 @@
             </div>
 
             <div id="complaints-pending" class="content-section">
-                <h3 id="pending-title" style="color:var(--gold); margin-bottom:10px; font-size:16px;"><i class="fas fa-inbox"></i> الشكاوى الجديدة</h3>
+                <div id="pending-title" style="margin-bottom:10px;"></div>
                 <div id="filters-pending" class="committee-filters"></div>
                 <div class="table-container" style="margin-top:0;">
                     <table>
@@ -220,7 +195,7 @@
             </div>
 
             <div id="complaints-resolved" class="content-section">
-                <h3 id="resolved-title" style="color:#10B981; margin-bottom:10px; font-size:16px;"><i class="fas fa-check-double"></i> الشكاوى المجاب عليها</h3>
+                <div id="resolved-title" style="margin-bottom:10px;"></div>
                 <div id="filters-resolved" class="committee-filters"></div>
                 <div class="table-container" style="margin-top:0;">
                     <table>
@@ -231,7 +206,7 @@
             </div>
 
             <div id="complaints-spam" class="content-section">
-                <h3 id="spam-title" style="color:#EF4444; margin-bottom:10px; font-size:16px;"><i class="fas fa-ban"></i> الشكاوى المرفوضة</h3>
+                <div id="spam-title" style="margin-bottom:10px;"></div>
                 <div id="filters-spam" class="committee-filters"></div>
                 <div class="table-container" style="margin-top:0;">
                     <table>
@@ -241,13 +216,9 @@
                 </div>
             </div>
 
-            <div id="staff" class="content-section">
-                <div style="display:flex; gap:10px; margin-bottom:15px; flex-wrap:wrap;">
-                    <button class="btn btn-green staff-manager-only" onclick="addStaff()"><i class="fas fa-user-plus"></i> إضافة عضو جديد للنظام</button>
-                    <button class="btn btn-blue" onclick="changeMyPassword()"><i class="fas fa-key"></i> تغيير كلمة المرور الخاصة بي</button>
-                </div>
-                
-                <div class="table-container staff-manager-only">
+            <div id="staff" class="content-section staff-manager-only">
+                <button class="btn btn-green" onclick="addStaff()"><i class="fas fa-user-plus"></i> إضافة عضو جديد للنظام</button>
+                <div class="table-container">
                     <table>
                         <thead><tr><th>الاسم</th><th>اسم الدخول</th><th>المواد المسموحة</th><th>الصفة</th><th>إجراء</th></tr></thead>
                         <tbody id="staff-list"></tbody>
@@ -263,7 +234,6 @@
         let globalCommittees = [];
         let fullComplaints = [];
         let globalStaff = [];
-        let systemIsOpen = true;
         
         let committeeFilter = JSON.parse(localStorage.getItem('admin_committee_filter')) || { sub: '' };
         let activeSubjectsFilter = 'all';
@@ -300,7 +270,6 @@
             globalCommittees = data.committees || [];
             fullComplaints = data.complaints || [];
             globalStaff = data.staff || [];
-            systemIsOpen = data.system_open; 
             
             const yearOrder = {
                 "الفرقة الأولى": 1,
@@ -327,30 +296,7 @@
             document.getElementById('welcome-text').innerHTML = `مرحباً، ${me.name} ${roleBadge}`;
 
             if(me.role !== 'super_admin') document.querySelectorAll('.super-only').forEach(e => e.style.display = 'none');
-            
-            if(me.role === 'ta') {
-                document.querySelectorAll('.staff-manager-only').forEach(e => e.style.display = 'none');
-                document.getElementById('staff-tab-text').innerText = 'حسابي';
-                document.getElementById('staff-icon').className = 'fas fa-user-cog icon-main';
-            } else {
-                document.getElementById('staff-tab-text').innerText = 'إدارة الطاقم';
-                document.getElementById('staff-icon').className = 'fas fa-users-cog icon-main';
-            }
-
-            if(me.role === 'super_admin') {
-                const sysBtn = document.getElementById('toggle-sys-btn');
-                if(systemIsOpen) {
-                    sysBtn.style.background = 'rgba(239, 68, 68, 0.1)';
-                    sysBtn.style.color = '#EF4444';
-                    sysBtn.style.border = '1px solid #EF4444';
-                    sysBtn.innerHTML = '<i class="fas fa-lock icon-main"></i> إيقاف النظام (إخفاء)';
-                } else {
-                    sysBtn.style.background = 'rgba(16, 185, 129, 0.1)';
-                    sysBtn.style.color = '#10B981';
-                    sysBtn.style.border = '1px solid #10B981';
-                    sysBtn.innerHTML = '<i class="fas fa-eye icon-main"></i> تفعيل النظام للطلاب';
-                }
-            }
+            if(me.role === 'ta') document.querySelectorAll('.staff-manager-only').forEach(e => e.style.display = 'none');
 
             if(me.role === 'super_admin' || me.role === 'doctor') {
                 document.getElementById('staff-list').innerHTML = globalStaff.map(s => {
@@ -449,29 +395,6 @@
             `}).join('');
         }
 
-        async function toggleSystem() {
-            const newState = !systemIsOpen;
-            const msg = newState ? 'هل أنت متأكد من تفعيل النظام وفتحه للطلاب مجدداً؟' : 'تأكيد إيقاف النظام؟\nلن يتمكن أي طالب من الدخول وسيظهر لهم خطأ (404 Not Found).';
-            
-            if(confirm(msg)) {
-                if(window.innerWidth <= 1024) toggleSidebar();
-                Swal.fire({title: 'جاري التحديث...', background: '#1a1f2c', color: '#fff', didOpen: () => Swal.showLoading()});
-                await fetch('/api/admin-action', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({action: 'toggle_system', is_open: newState}) });
-                await refreshData();
-                Swal.fire({...swalDark, icon: 'success', title: newState ? 'تم تفعيل النظام' : 'تم إيقاف النظام', timer: 1500, showConfirmButton: false});
-            }
-        }
-
-        async function toggleSubjectComplaints(subId, isOpen) {
-            const msg = isOpen ? 'هل أنت متأكد من فتح باب الشكاوى لهذه المادة مجدداً؟' : 'هل أنت متأكد من إيقاف الشكاوى؟\nلن يظهر للطلاب زر (لدي مشكلة) في هذه المادة بعد الآن.';
-            if(confirm(msg)) {
-                Swal.fire({title: 'جاري التحديث...', background: '#1a1f2c', color: '#fff', didOpen: () => Swal.showLoading()});
-                await fetch('/api/admin-action', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({action: 'toggle_subject_complaints', subject_id: subId, is_open: isOpen}) });
-                await refreshData();
-                Swal.fire({...swalDark, icon: 'success', title: isOpen ? 'تم فتح الشكاوى' : 'تم إيقاف الشكاوى', timer: 1500, showConfirmButton: false});
-            }
-        }
-
         function saveAllFilters() {
             localStorage.setItem('admin_committee_filter', JSON.stringify(committeeFilter));
             localStorage.setItem('admin_comp_filters', JSON.stringify(compFilters));
@@ -541,10 +464,15 @@
             const totalStudents = list.reduce((sum, c) => sum + (c.ids ? c.ids.length : 0), 0);
             
             document.getElementById('committees-title').innerHTML = `
-                <i class="fas fa-layer-group"></i> قوائم اللجان - مادة: <span style="color:#fff;">${sName} <span style="font-size:12px;color:var(--text-muted);">${sDetails}</span></span> 
-                <span style="display:inline-block; margin-top:10px; color:var(--gold); border:1px solid var(--gold); background:rgba(255,179,0,0.1); padding:4px 10px; border-radius:12px; font-size:12px; margin-right:5px; font-weight:bold;">
-                    (${list.length} لجان / ${totalStudents} طالب)
-                </span>
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; width:100%;">
+                    <div style="font-size:16px; color:var(--gold); font-weight:bold;">
+                        <i class="fas fa-layer-group"></i> قوائم اللجان - مادة: <span style="color:#fff;">${sName} <span style="font-size:12px;color:var(--text-muted);">${sDetails}</span></span> 
+                        <span style="display:inline-block; margin-top:5px; color:var(--gold); border:1px solid var(--gold); background:rgba(255,179,0,0.1); padding:4px 10px; border-radius:12px; font-size:12px; margin-right:5px; font-weight:bold;">
+                            (${list.length} لجان / ${totalStudents} طالب)
+                        </span>
+                    </div>
+                    ${me.role === 'super_admin' && activeSub && list.length > 0 ? `<button class="btn btn-red" onclick="wipeSubjectCommittees('${activeSub}')"><i class="fas fa-trash-alt"></i> مسح جميع لجان المادة</button>` : ''}
+                </div>
             `;
 
             const tbody = document.getElementById('committees-list');
@@ -567,6 +495,30 @@
                     </td>
                 </tr>
             `).join('');
+        }
+
+        async function wipeSubjectCommittees(subId) {
+            if(!subId) return;
+            const { isConfirmed } = await Swal.fire({
+                ...swalDark,
+                title: 'تأكيد المسح؟',
+                text: 'سيتم مسح جميع اللجان التابعة لهذه المادة نهائياً!',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#EF4444',
+                confirmButtonText: 'نعم، امسح الكل',
+                cancelButtonText: 'إلغاء'
+            });
+            if(isConfirmed) {
+                Swal.fire({title: 'جاري المسح...', background: '#1a1f2c', color: '#fff', didOpen: () => Swal.showLoading()});
+                await fetch('/api/admin-action', { 
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json'}, 
+                    body: JSON.stringify({action: 'wipe_subject_committees', subject_id: subId}) 
+                });
+                await refreshData();
+                Swal.fire({...swalDark, icon: 'success', title: 'تم المسح بنجاح!', timer: 1500, showConfirmButton: false});
+            }
         }
 
         async function editCommittee(comId) {
@@ -621,11 +573,15 @@
             
             let list = fullComplaints.filter(c => c.status === tabName);
             if(activeSub) list = list.filter(c => c.subject_id === activeSub);
+            
+            const totalInSubject = list.length; // Count before committee filter for the wipe button condition
+
             if(activeCom !== 'all') list = list.filter(c => c.assigned_committee === activeCom || (c.actual_committee && c.actual_committee === activeCom));
 
             const sName = globalSubjects.find(s => s.id === activeSub)?.name || '';
-            const titles = { 'pending': 'الشكاوى الجديدة', 'resolved': 'الشكاوى التي تم حلها', 'spam': 'الشكاوى المرفوضة' };
+            const titles = { 'pending': 'الشكاوى الجديدة', 'resolved': 'الشكاوى المجاب عليها', 'spam': 'الشكاوى المرفوضة' };
             const icons = { 'pending': 'fa-inbox', 'resolved': 'fa-check-double', 'spam': 'fa-ban' };
+            const colors = { 'pending': 'var(--gold)', 'resolved': '#10B981', 'spam': '#EF4444' };
             
             const badgeColors = {
                 'pending': 'color:var(--gold); border:1px solid var(--gold); background:rgba(255,179,0,0.1);',
@@ -634,21 +590,16 @@
             };
             const bStyle = badgeColors[tabName];
 
-            // التحقق من حالة الشكاوى للمادة الحالية وإضافة زر التحكم للدكتور أو الآدمن
-            let complaintsOpen = globalSubjects.find(s => s.id === activeSub)?.complaints_open !== false;
-            let toggleBtn = '';
-            if((me.role === 'super_admin' || me.role === 'doctor') && tabName === 'pending') {
-                toggleBtn = `<br><button class="btn ${complaintsOpen ? 'btn-red' : 'btn-green'}" style="margin-top:10px; font-size:12px; margin-right:5px;" onclick="toggleSubjectComplaints('${activeSub}', ${!complaintsOpen})">
-                                <i class="fas ${complaintsOpen ? 'fa-lock' : 'fa-lock-open'}"></i> ${complaintsOpen ? 'إيقاف استقبال الشكاوى لهذه المادة' : 'تفعيل استقبال الشكاوى لهذه المادة'}
-                             </button>`;
-            }
-
             document.getElementById(`${tabName}-title`).innerHTML = `
-                <i class="fas ${icons[tabName]}"></i> ${titles[tabName]} - مادة: <span style="color:#fff;">${sName}</span> 
-                <span style="${bStyle} display:inline-block; margin-top:10px; padding:4px 10px; border-radius:12px; font-size:12px; margin-right:5px; font-weight:bold;">
-                    العدد المعروض: ${list.length} طالب
-                </span>
-                ${toggleBtn}
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; width:100%;">
+                    <div style="font-size:16px; color:${colors[tabName]}; font-weight:bold;">
+                        <i class="fas ${icons[tabName]}"></i> ${titles[tabName]} - مادة: <span style="color:#fff;">${sName}</span> 
+                        <span style="${bStyle} display:inline-block; margin-top:5px; padding:4px 10px; border-radius:12px; font-size:12px; margin-right:5px; font-weight:bold;">
+                            العدد المعروض: ${list.length} طالب
+                        </span>
+                    </div>
+                    ${me.role === 'super_admin' && activeSub && totalInSubject > 0 ? `<button class="btn btn-red" onclick="wipeSubjectComplaints('${activeSub}', '${tabName}')"><i class="fas fa-trash-alt"></i> مسح جميع الشكاوى (${titles[tabName]})</button>` : ''}
+                </div>
             `;
 
             let relevantCommittees = globalCommittees.filter(c => c.subject_id === activeSub);
@@ -687,6 +638,31 @@
                     return `<tr><td><span class="track-id" style="color:#EF4444; border:1px solid rgba(239,68,68,0.3);">${c.tracking_id}</span></td>${studentInfo}<td>${locs}</td><td class="text-wrap-bold" style="color:#9CA3AF;">${c.problem}</td><td><div style="display:flex; justify-content:center; gap:5px; flex-direction:column;"><button class="btn btn-blue" onclick="updateComplaintStatus('${c.tracking_id}', 'restore_complaint')"><i class="fas fa-undo"></i> استرجاع</button><button class="btn btn-red" onclick="updateComplaintStatus('${c.tracking_id}', 'delete_complaint')"><i class="fas fa-trash"></i> حذف نهائي</button></div></td></tr>`;
                 }
             }).join('');
+        }
+
+        async function wipeSubjectComplaints(subId, status) {
+            if(!subId) return;
+            const statusText = status === 'pending' ? 'الجديدة' : (status === 'resolved' ? 'المجاب عليها' : 'المرفوضة');
+            const { isConfirmed } = await Swal.fire({
+                ...swalDark,
+                title: 'تأكيد المسح؟',
+                text: `سيتم مسح جميع الشكاوى (${statusText}) التابعة لهذه المادة نهائياً!`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#EF4444',
+                confirmButtonText: 'نعم، امسح الكل',
+                cancelButtonText: 'إلغاء'
+            });
+            if(isConfirmed) {
+                Swal.fire({title: 'جاري المسح...', background: '#1a1f2c', color: '#fff', didOpen: () => Swal.showLoading()});
+                await fetch('/api/admin-action', { 
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json'}, 
+                    body: JSON.stringify({action: 'wipe_subject_complaints', subject_id: subId, status: status}) 
+                });
+                await refreshData();
+                Swal.fire({...swalDark, icon: 'success', title: 'تم المسح بنجاح!', timer: 1500, showConfirmButton: false});
+            }
         }
         
         function switchTab(id, el) {
@@ -974,31 +950,6 @@
                 } else {
                     await refreshData(); 
                     Swal.fire({...swalDark, icon: 'success', title: 'تم التعديل بنجاح!', timer: 1500, showConfirmButton: false});
-                }
-            }
-        }
-
-        async function changeMyPassword() {
-            const { value: pass } = await Swal.fire({
-                ...swalDark,
-                title: 'تغيير كلمة المرور الخاصة بي',
-                input: 'password',
-                inputPlaceholder: 'أدخل كلمة المرور الجديدة...',
-                showCancelButton: true,
-                confirmButtonText: 'تحديث الحساب <i class="fas fa-save"></i>',
-                cancelButtonText: 'إلغاء',
-                inputValidator: (val) => { if (!val.trim()) return 'يجب إدخال كلمة مرور جديدة!'; }
-            });
-            
-            if (pass) {
-                Swal.fire({title: 'جاري الحفظ...', background: '#1a1f2c', color: '#fff', didOpen: () => Swal.showLoading()});
-                const res = await fetch('/api/admin-action', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({action: 'change_my_password', new_password: pass}) });
-                const data = await res.json();
-                
-                if (data.status === 'success') {
-                    Swal.fire({...swalDark, icon: 'success', title: 'تم تغيير كلمة المرور بنجاح!', timer: 1500, showConfirmButton: false});
-                } else {
-                    Swal.fire({...swalDark, icon: 'error', text: data.message});
                 }
             }
         }
