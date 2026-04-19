@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>بوابة الطلاب | DR. Mohamed Selem</title>
+    <title>بوابة الطلاب | Nexus 2026</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
-        :root { --gold: #FFB300; --bg-body: #0a0e17; --card-bg: #161b26; --text-muted: #9CA3AF; }
+        :root { --gold: #FFB300; --bg-body: #0a0e17; --card-bg: #161b26; --text-muted: #9CA3AF; --border: #374151; }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Cairo', sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background-color: var(--bg-body); color: #fff; overflow-x: hidden; display: flex; flex-direction: column; min-height: 100vh;}
 
@@ -19,29 +19,42 @@
         ::-webkit-scrollbar-thumb { background: rgba(255, 179, 0, 0.3); border-radius: 10px; transition: 0.3s; }
         ::-webkit-scrollbar-thumb:hover { background: var(--gold); }
 
-        .navbar { background: rgba(10, 14, 23, 0.95); backdrop-filter: blur(10px); height: 70px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; border-bottom: 1px solid rgba(255,179,0,0.2); }
-        .logo { font-size: 20px; font-weight: 900; color: var(--gold); }
-        .btn-track { background: transparent; border: 1px solid var(--gold); color: var(--gold); padding: 8px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s; }
-        .btn-track:hover { background: var(--gold); color: #000; }
-
-        .container { padding: 40px 20px; max-width: 1200px; margin: auto; text-align: center; flex: 1; width: 100%;}
-        .grid-layout { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 25px; margin-top: 40px;}
+        #auth-screen { position: fixed; inset: 0; z-index: 10000; background: #060913; display: flex; justify-content: center; align-items: center; padding: 20px; }
+        .auth-card { background: var(--card-bg); padding: 40px; border-radius: 20px; border: 1px solid var(--border); text-align: center; width: 100%; max-width: 450px; box-shadow: 0 0 40px rgba(0,0,0,0.8); }
+        .auth-input { width: 100%; padding: 15px; margin-bottom: 15px; border-radius: 12px; border: 1px solid var(--border); background: #000; color: #fff; font-size: 15px; outline: none; transition: 0.3s; }
+        .auth-input:focus { border-color: var(--gold); }
         
-        .subject-card { background: linear-gradient(145deg, #161b26, #0d1117); border-radius: 20px; padding: 30px; border: 1px solid rgba(255,179,0,0.2); cursor: pointer; transition: 0.3s; box-shadow: 0 5px 15px rgba(0,0,0,0.5);}
-        .subject-card:hover { transform: translateY(-10px); border-color: var(--gold); box-shadow: 0 10px 30px rgba(255,179,0,0.2); }
-        .subject-card img { width: 120px; height: 120px; object-fit: contain; margin-bottom: 20px; filter: drop-shadow(0 5px 10px rgba(255,179,0,0.3));}
+        .navbar { background: rgba(10, 14, 23, 0.95); backdrop-filter: blur(10px); height: 75px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; border-bottom: 1px solid rgba(255,179,0,0.2); }
+        .logo { font-size: 20px; font-weight: 900; color: var(--gold); display: flex; align-items: center; gap: 10px;}
+        
+        .nav-actions { display: flex; gap: 10px; }
+        .btn-outline { background: transparent; border: 1px solid var(--gold); color: var(--gold); padding: 8px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s; font-size: 13px;}
+        .btn-outline:hover { background: var(--gold); color: #000; }
+        .btn-danger-outline { background: transparent; border: 1px solid #EF4444; color: #EF4444; padding: 8px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s; font-size: 13px;}
+        .btn-danger-outline:hover { background: #EF4444; color: #fff; }
 
+        .container { padding: 30px 20px; max-width: 1200px; margin: auto; flex: 1; width: 100%; display: flex; flex-direction: column;}
+        
+        .student-info-banner { background: linear-gradient(90deg, rgba(255,179,0,0.1), transparent); border-right: 4px solid var(--gold); padding: 20px; border-radius: 10px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;}
+        .info-block { display: flex; flex-direction: column; gap: 5px;}
+
+        .grid-layout { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; margin-top: 20px;}
+        
+        .subject-card { background: linear-gradient(145deg, #161b26, #0d1117); border-radius: 20px; padding: 30px; border: 1px solid rgba(255,179,0,0.2); cursor: pointer; transition: 0.3s; box-shadow: 0 5px 15px rgba(0,0,0,0.5); display: flex; flex-direction: column; align-items: center; text-align: center;}
+        .subject-card:hover { transform: translateY(-8px); border-color: var(--gold); box-shadow: 0 10px 30px rgba(255,179,0,0.2); }
+        .subject-card img { width: 110px; height: 110px; object-fit: contain; margin-bottom: 20px; filter: drop-shadow(0 5px 10px rgba(255,179,0,0.3));}
+
+        .empty-state { text-align: center; padding: 50px 20px; color: var(--text-muted); }
         footer { text-align: center; padding: 30px 20px; background: #0a0e17; border-top: 1px solid rgba(255,255,255,0.05); margin-top: auto;}
 
-        /* --- Fixed Wizard Screen --- */
+        /* --- Wizard Screen --- */
         .wizard-screen { position: fixed; inset: 0; background: rgba(10, 14, 23, 0.98); z-index: 10000; display: none; flex-direction: column; }
         .wizard-header { padding: 20px; background: var(--card-bg); border-bottom: 1px solid rgba(255,179,0,0.3); display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.5); z-index: 2;}
         .wizard-close { background: none; border: none; color: #EF4444; font-size: 24px; cursor: pointer; transition: 0.3s; }
         .wizard-close:hover { transform: scale(1.1); }
         
-        /* The Magic Fix for Scrolling */
         .wizard-body { flex: 1; overflow-y: auto; display: flex; flex-direction: column; padding: 20px; }
-        .wizard-card { margin: auto; background: var(--card-bg); width: 100%; max-width: 500px; padding: 30px; border-radius: 20px; border: 1px solid rgba(255,179,0,0.3); box-shadow: 0 10px 40px rgba(0,0,0,0.8); position: relative; }
+        .wizard-card { margin: auto; background: var(--card-bg); width: 100%; max-width: 500px; padding: 30px; border-radius: 20px; border: 1px solid rgba(255,179,0,0.3); box-shadow: 0 10px 40px rgba(0,0,0,0.8); }
         
         .wizard-step { display: none; animation: fadeInRight 0.4s ease-out; }
         .wizard-step.active { display: block; }
@@ -60,32 +73,86 @@
         .wizard-btns { display: flex; gap: 15px; margin-top: 10px; }
         .btn-primary { background: linear-gradient(90deg, #FFB300, #FFD54F); color: #000; border: none; flex: 1; padding: 15px; border-radius: 12px; font-size: 16px; font-weight: 900; cursor: pointer; transition: 0.3s; }
         .btn-secondary { background: transparent; color: #fff; border: 1px solid #4a5568; padding: 15px 25px; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s; }
-        .btn-primary:hover { filter: brightness(1.1); } .btn-secondary:hover { background: #4a5568; }
-
+        
         .char-counter { text-align: left; font-size: 12px; color: var(--text-muted); margin-top: -15px; margin-bottom: 20px; font-family: monospace;}
         .tracking-code { background: #000; padding: 20px; border-radius: 15px; border: 2px dashed var(--gold); color: var(--gold); font-size: 32px; font-family: monospace; font-weight: 900; letter-spacing: 5px; margin: 20px 0; display: inline-block;}
         
         .swal2-popup { border-radius: 20px !important; background: #1a1f2c !important; color: #fff !important; }
-        .swal2-input { background: #0d1117 !important; color: #fff !important; border: 1px solid #4a5568 !important; text-align: center;}
+        
+        #loading-screen { display:none; position: fixed; inset: 0; background: rgba(6, 9, 19, 0.9); z-index: 9999; justify-content: center; align-items: center; flex-direction: column; }
+        .loader { border: 4px solid rgba(255, 179, 0, 0.3); border-top: 4px solid var(--gold); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin-bottom: 15px;}
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        @media (max-width: 768px) {
+            .student-info-banner { flex-direction: column; align-items: flex-start; }
+            .navbar { height: auto; padding: 15px 20px; flex-direction: column; gap: 15px;}
+            .btn-outline, .btn-danger-outline { width: 100%; text-align: center;}
+        }
     </style>
 </head>
 <body>
 
-    <nav class="navbar">
-        <div class="logo"><i class="fas fa-university"></i> نظام اللجان</div>
-        <button class="btn-track" onclick="openTrackModal()"><i class="fas fa-search"></i> تتبع شكوى</button>
-    </nav>
+    <div id="auth-screen">
+        <div class="auth-card">
+            <i class="fas fa-chalkboard-teacher fa-3x" style="color:var(--gold); margin-bottom:20px;"></i>
+            <h2 style="color:#fff; margin-bottom:10px; font-size:24px;">بوابة الطلاب</h2>
+            <p style="color:var(--text-muted); font-size:14px; margin-bottom:25px;">قم بتسجيل بياناتك لمرة واحدة ليتم حفظها بجهازك</p>
+            
+            <input type="text" id="reg-name" class="auth-input" placeholder="الاسم الأول">
+            <input type="number" id="reg-id" class="auth-input" placeholder="رقم الـ ID (7 أرقام)">
+            
+            <select id="reg-year" class="auth-input">
+                <option value="" disabled selected>اختر الفرقة الدراسية</option>
+                <option value="الفرقة الأولى">الفرقة الأولى</option>
+                <option value="الفرقة الثانية">الفرقة الثانية</option>
+                <option value="الفرقة الثالثة">الفرقة الثالثة</option>
+                <option value="الفرقة الرابعة">الفرقة الرابعة</option>
+            </select>
 
-    <div class="container">
-        <h1 style="font-size:32px; font-weight:900; margin-bottom:10px;">المقررات الدراسية</h1>
-        <p style="color:var(--text-muted); font-size:18px;">اختر المادة لمعرفة لجنتك الامتحانية أو تقديم شكوى</p>
-        <div class="grid-layout" id="subjects-container"></div>
+            <select id="reg-dept" class="auth-input">
+                <option value="عام (IT)">عام (IT)</option>
+            </select>
+
+            <button class="btn-primary" style="width:100%;" onclick="saveStudentData()">دخول وحفظ البيانات <i class="fas fa-sign-in-alt"></i></button>
+        </div>
     </div>
 
-    <footer>
-        <h2 style="color: var(--gold); font-weight: 900; font-size: 24px;">DR. Mohamed Selem</h2>
-        <p style="color: var(--text-muted); font-size: 14px;">تحت إشراف نخبة من المعيدين الأكفاء</p>
-    </footer>
+    <div id="loading-screen">
+        <div class="loader"></div>
+        <h3 id="loading-text" style="color:var(--gold);">جاري التحميل...</h3>
+    </div>
+
+    <div id="main-ui" style="display: none; flex-direction: column; min-height: 100vh;">
+        <nav class="navbar">
+            <div class="logo"><i class="fas fa-university"></i> Nexus System</div>
+            <div class="nav-actions">
+                <button class="btn-outline" onclick="openTrackModal()"><i class="fas fa-search"></i> تتبع شكوى سابقة</button>
+                <button class="btn-danger-outline" onclick="logoutStudent()"><i class="fas fa-sign-out-alt"></i> تسجيل خروج</button>
+            </div>
+        </nav>
+
+        <div class="container">
+            <div class="student-info-banner">
+                <div class="info-block">
+                    <span style="color:var(--text-muted); font-size:12px;">مرحباً بك</span>
+                    <strong id="display-name" style="font-size:20px; color:var(--gold);">...</strong>
+                </div>
+                <div class="info-block" style="text-align: left;">
+                    <span style="color:var(--text-muted); font-size:12px;">رقم الـ ID: <b id="display-id" style="color:#fff; font-family:monospace; font-size:14px;">...</b></span>
+                    <span style="color:var(--text-muted); font-size:12px;"><b id="display-academic" style="color:#10B981;">...</b></span>
+                </div>
+            </div>
+
+            <h2 style="font-size:24px; font-weight:900; margin-bottom:5px; display:flex; align-items:center; gap:10px;"><i class="fas fa-book-open" style="color:var(--gold);"></i> المقررات الدراسية الخاصة بك</h2>
+            <p style="color:var(--text-muted); font-size:15px; margin-bottom: 20px;">اضغط على المادة لمعرفة لجنتك الامتحانية أو تقديم شكوى مباشرة.</p>
+            
+            <div id="subjects-container" class="grid-layout"></div>
+        </div>
+
+        <footer>
+            <h2 style="color: var(--gold); font-weight: 900; font-size: 24px;">Nexus 2026</h2>
+        </footer>
+    </div>
 
     <div id="wizard-screen" class="wizard-screen">
         <div class="wizard-header">
@@ -97,10 +164,15 @@
             <div class="wizard-card">
                 <div id="step-1" class="wizard-step active">
                     <h2 id="wiz-dynamic-title" style="color:var(--gold); text-align:center; margin-bottom:20px; font-weight:900;"></h2>
-                    <input type="text" id="wiz-name" class="input-dark" placeholder="الاسم الرباعي كاملاً">
+                    
+                    <div style="background:rgba(255,255,255,0.05); padding:15px; border-radius:12px; margin-bottom:20px; border:1px solid var(--border);">
+                        <p style="color:var(--text-muted); font-size:12px;">مقدم الشكوى:</p>
+                        <h4 id="wiz-readonly-name" style="color:#fff; margin-bottom:5px;"></h4>
+                        <p style="color:var(--gold); font-family:monospace; font-size:14px; font-weight:bold;" id="wiz-readonly-id"></p>
+                    </div>
                     
                     <div class="hint-box">
-                        <p style="color:#10B981; font-size:14px; margin-bottom:5px;">تلميح: اللجنة المسجلة لك بالنظام هي:</p>
+                        <p style="color:#10B981; font-size:14px; margin-bottom:5px;">اللجنة المسجلة لك بالنظام هي:</p>
                         <h3 id="wiz-assigned-com" style="color:#fff; font-weight:900; font-size: 22px;">-</h3>
                     </div>
 
@@ -113,7 +185,7 @@
                         </label>
                     </div>
 
-                    <input type="text" id="wiz-actual-com" class="input-dark" placeholder="برجاء كتابة المكان الفعلي لمراجعة حلك..." style="display:none; border-color:#EF4444;">
+                    <input type="text" id="wiz-actual-com" class="input-dark" placeholder="برجاء كتابة المكان الفعلي..." style="display:none; border-color:#EF4444;">
                     <div class="wizard-btns"><button class="btn-primary" onclick="goToStep2()">التالي <i class="fas fa-arrow-left"></i></button></div>
                 </div>
 
@@ -135,86 +207,226 @@
     </div>
 
     <script>
-        let currentSubId, currentSubName, currentStudentID, currentAssignedCom;
+        let currentSubId, currentSubName, currentAssignedCom;
 
-        window.onload = async () => {
-            const res = await fetch('/api/get-subjects');
-            const data = await res.json();
-            document.getElementById('subjects-container').innerHTML = data.subjects.map(sub => `
-                <div class="subject-card" onclick="askForID('${sub.id}', '${sub.name}')">
-                    <img src="${sub.image}">
-                    <h2 style="font-size:22px; font-weight:900; color:var(--gold);">${sub.name}</h2>
-                </div>
-            `).join('');
+        // القوائم المنسدلة للتسجيل
+        document.getElementById('reg-year').addEventListener('change', function(e) {
+            const deptSelect = document.getElementById('reg-dept');
+            if (e.target.value === 'الفرقة الثالثة' || e.target.value === 'الفرقة الرابعة') {
+                deptSelect.innerHTML = '<option value="" disabled selected>اختر التخصص (Network / Software)</option><option value="Software">Software</option><option value="Network">Network</option>';
+            } else {
+                deptSelect.innerHTML = '<option value="عام (IT)">عام (IT)</option>';
+            }
+        });
+
+        // التحقق من الجلسة عند التحميل
+        window.onload = () => {
+            const savedID = localStorage.getItem('drselem_student_id');
+            if (savedID) {
+                document.getElementById('auth-screen').style.display = 'none';
+                document.getElementById('main-ui').style.display = 'flex';
+                initDashboard();
+            }
         };
 
-        async function askForID(subId, subName) {
-            const { value: studentID } = await Swal.fire({
-                title: `<span style="color:var(--gold);">${subName}</span>`, text: 'أدخل رقم الـ ID الخاص بك (7 أرقام)', input: 'number', inputPlaceholder: '2220556', confirmButtonText: 'بحث <i class="fas fa-search"></i>', confirmButtonColor: '#FFB300'
-            });
+        // حفظ البيانات عند التسجيل
+        function saveStudentData() {
+            const stName = document.getElementById('reg-name').value.trim();
+            const stId = document.getElementById('reg-id').value.trim();
+            const stYear = document.getElementById('reg-year').value;
+            const stDept = document.getElementById('reg-dept').value;
 
-            if (studentID) {
-                Swal.fire({title: 'جاري البحث...', didOpen: () => Swal.showLoading()});
-                const res = await fetch('/api/check-id', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({subject_id: subId, student_id: studentID}) });
+            if (!stName) return Swal.fire({icon: 'warning', text: 'يرجى كتابة الاسم الأول!', background:'#1a1f2c', color:'#fff'});
+            if (stId.length !== 7 || !stId.match(/^\d+$/)) return Swal.fire({icon: 'error', text: 'رقم الـ ID يجب أن يكون 7 أرقام!', background:'#1a1f2c', color:'#fff'});
+            if (!stYear || !stDept) return Swal.fire({icon: 'warning', text: 'يرجى تحديد الفرقة والقسم!', background:'#1a1f2c', color:'#fff'});
+
+            localStorage.setItem('drselem_student_id', stId);
+            localStorage.setItem('drselem_student_name', stName);
+            localStorage.setItem('drselem_student_year', stYear);
+            localStorage.setItem('drselem_student_dept', stDept);
+
+            document.getElementById('auth-screen').style.display = 'none';
+            document.getElementById('main-ui').style.display = 'flex';
+            
+            initDashboard();
+        }
+
+        // تسجيل الخروج
+        function logoutStudent() {
+            Swal.fire({
+                title: 'تسجيل الخروج', text: "هل أنت متأكد من تسجيل الخروج ومسح بياناتك من المتصفح؟", icon: 'warning', background: '#1a1f2c', color: '#fff', showCancelButton: true, confirmButtonColor: '#EF4444', confirmButtonText: 'نعم، خروج', cancelButtonText: 'إلغاء'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    localStorage.clear();
+                    location.reload();
+                }
+            });
+        }
+
+        // --- عرض المواد المخصصة للطالب بناءً على فرقته وقسمه (والمواد العامة لفرقته) ---
+        async function initDashboard() {
+            const stYear = (localStorage.getItem('drselem_student_year') || '').trim();
+            const stDept = (localStorage.getItem('drselem_student_dept') || '').trim();
+
+            document.getElementById('display-name').innerText = localStorage.getItem('drselem_student_name');
+            document.getElementById('display-id').innerText = localStorage.getItem('drselem_student_id');
+            document.getElementById('display-academic').innerText = `${stYear} - قسم ${stDept}`;
+
+            document.getElementById('loading-screen').style.display = 'flex';
+
+            try {
+                const res = await fetch('/api/get-subjects');
+                const data = await res.json();
+                
+                if (data.status === 'error') {
+                    document.getElementById('loading-screen').style.display = 'none';
+                    return Swal.fire({icon: 'error', text: data.message, background:'#1a1f2c', color:'#fff'});
+                }
+
+                // الفلترة الذكية: يطابق الفرقة، ويجلب مواد القسم المحدد + مواد "عام (IT)" للفرقة نفسها
+                const validSubjects = data.subjects.filter(sub => {
+                    const subYear = (sub.year || '').trim();
+                    const subDept = (sub.department || '').trim();
+                    
+                    if (subYear !== stYear) return false;
+                    return subDept === stDept || subDept === 'عام (IT)';
+                });
+
+                document.getElementById('loading-screen').style.display = 'none';
+                const container = document.getElementById('subjects-container');
+                
+                if (validSubjects.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-folder-open fa-4x" style="color:var(--border); margin-bottom:15px;"></i>
+                            <h3 style="color:#fff;">لا توجد مواد متاحة</h3>
+                            <p style="font-size:14px; margin-top:10px;">لم يتم إضافة أي مقررات تخص فرقتك حتى الآن.</p>
+                        </div>
+                    `;
+                } else {
+                    // عرض البطاقات بشكل جمالي
+                    container.innerHTML = validSubjects.map(sub => {
+                        let badgeColor = '#3B82F6'; 
+                        if(sub.department === 'Software') badgeColor = '#10B981';
+                        if(sub.department === 'Network') badgeColor = '#EF4444';
+                        
+                        const deptLabel = sub.department && sub.department !== 'عام (IT)' ? ` - ${sub.department}` : '';
+                        
+                        return `
+                        <div class="subject-card" onclick="checkMyID('${sub.id}', '${sub.name}')">
+                            <img src="${sub.image}" alt="subject">
+                            <h2 style="font-size:22px; font-weight:900; color:var(--gold); margin-bottom:10px;">${sub.name}</h2>
+                            <span style="color:${badgeColor}; font-size:12px; font-weight:bold; background:rgba(255,255,255,0.05); padding:4px 10px; border-radius:8px;">${sub.year}${deptLabel}</span>
+                        </div>
+                    `}).join('');
+                }
+            } catch (error) {
+                document.getElementById('loading-screen').style.display = 'none';
+                Swal.fire({icon: 'error', text: 'حدث خطأ في الاتصال بالسيرفر.', background:'#1a1f2c', color:'#fff'});
+            }
+        }
+
+        // --- البحث عن الـ ID في المادة المطلوبة للتحقق قبل فتح الشكوى ---
+        async function checkMyID(subId, subName) {
+            const stId = localStorage.getItem('drselem_student_id');
+            Swal.fire({title: 'جاري البحث عن لجنتك...', background:'#1a1f2c', color:'#fff', didOpen: () => Swal.showLoading()});
+            
+            try {
+                const res = await fetch('/api/check-id', { 
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json'}, 
+                    body: JSON.stringify({subject_id: subId, student_id: stId}) 
+                });
                 const data = await res.json();
 
                 if (data.status === 'success') {
                     Swal.fire({
-                        html: `<i class="fas fa-check-circle fa-4x" style="color:#10B981; margin-bottom:15px;"></i><h2 style="color:var(--gold);">${subName}</h2><div style="background:rgba(16, 185, 129, 0.1); padding:20px; border-radius:15px; border:1px solid #10B981; margin:20px 0;"><p style="color:#10B981; font-size:14px; margin-bottom:5px;">لجنتك هي:</p><h2 style="color:#fff; font-weight:900; font-size:24px;">${data.committee_name}</h2></div>`,
-                        showDenyButton: true, confirmButtonColor: '#FFB300', confirmButtonText: 'حسناً، شكراً', denyButtonColor: '#EF4444', denyButtonText: 'لدي مشكلة (شكوى)'
+                        html: `<i class="fas fa-check-circle fa-4x" style="color:#10B981; margin-bottom:15px;"></i><h2 style="color:var(--gold); font-weight:bold;">${subName}</h2><div style="background:rgba(16, 185, 129, 0.1); padding:20px; border-radius:15px; border:1px solid #10B981; margin:20px 0;"><p style="color:#10B981; font-size:14px; margin-bottom:5px;">مكان لجنتك هو:</p><h2 style="color:#fff; font-weight:900; font-size:28px;">${data.committee_name}</h2></div>`,
+                        background: '#1a1f2c', showDenyButton: true, confirmButtonColor: '#FFB300', confirmButtonText: 'حسناً، شكراً', denyButtonColor: '#EF4444', denyButtonText: 'لدي مشكلة (شكوى)'
                     }).then((result) => {
-                        if (result.isDenied) openWizard(subId, subName, studentID, data.committee_name);
+                        // السماح بتقديم الشكوى فقط إذا كان مسجلاً في لجنة
+                        if (result.isDenied) openWizard(subId, subName, data.committee_name);
                     });
                 } else {
-                    Swal.fire({icon: 'error', title: 'غير مدرج', text: data.message, confirmButtonColor: '#EF4444'});
+                    // منع تقديم الشكوى إذا لم يكن مدرجاً في أي لجنة لهذه المادة
+                    Swal.fire({
+                        icon: 'error', 
+                        title: 'عفواً', 
+                        html: `<p style="line-height:1.6;">رقمك <b style="color:var(--gold); font-family:monospace; font-size:16px;">(${stId})</b> غير مسجل في أي لجنة لهذه المادة.<br><span style="font-size:13px; color:var(--text-muted);">يرجى مراجعة إدارة الامتحانات أو الكنترول ولا يمكنك تقديم شكوى.</span></p>`, 
+                        background:'#1a1f2c', color:'#fff', confirmButtonColor: '#EF4444'
+                    });
                 }
+            } catch(e) {
+                Swal.fire({icon: 'error', text: 'حدث خطأ بالشبكة، يرجى المحاولة مرة أخرى.', background:'#1a1f2c', color:'#fff'});
             }
         }
 
-        // --- Wizard Logic ---
-        function openWizard(subId, subName, stuId, comName) {
-            currentSubId = subId; currentSubName = subName; currentStudentID = stuId; currentAssignedCom = comName;
+        // --- Wizard Logic (تقديم الشكوى) ---
+        function openWizard(subId, subName, comName) {
+            currentSubId = subId; currentSubName = subName; currentAssignedCom = comName;
             
-            // تغيير العنوان ليكون اسم المادة بدلاً من "البيانات الأساسية"
-            document.getElementById('wiz-dynamic-title').innerText = 'مادة: ' + subName;
+            document.getElementById('wiz-readonly-name').innerText = localStorage.getItem('drselem_student_name');
+            document.getElementById('wiz-readonly-id').innerText = localStorage.getItem('drselem_student_id');
+            document.getElementById('wiz-dynamic-title').innerText = 'تقديم شكوى - ' + subName;
+            document.getElementById('wiz-assigned-com').innerText = comName; 
+            document.getElementById('wiz-sub-name').innerText = subName;
             
-            document.getElementById('wiz-assigned-com').innerText = comName; document.getElementById('wiz-sub-name').innerText = subName;
-            document.getElementById('wiz-name').value = ''; document.getElementById('wiz-actual-com').value = ''; document.getElementById('wiz-prob').value = '';
+            document.getElementById('wiz-actual-com').value = ''; document.getElementById('wiz-prob').value = '';
             updateCharCount(); document.querySelectorAll('input[name="loc"]')[0].checked = true; toggleLocationInput(false);
+            
             document.getElementById('wizard-screen').style.display = 'flex'; goToStep1();
         }
+
         function closeWizard() { document.getElementById('wizard-screen').style.display = 'none'; }
         function toggleLocationInput(show) { document.getElementById('wiz-actual-com').style.display = show ? 'block' : 'none'; }
         function goToStep1() { document.getElementById('step-2').classList.remove('active'); document.getElementById('step-1').classList.add('active'); }
+        
         function goToStep2() {
-            const name = document.getElementById('wiz-name').value;
             const isOther = document.querySelectorAll('input[name="loc"]')[1].checked;
             const actualLoc = document.getElementById('wiz-actual-com').value;
-            if(!name) return Swal.fire({icon: 'warning', text: 'يرجى كتابة اسمك الرباعي', background:'#1a1f2c', color:'#fff'});
-            if(isOther && !actualLoc) return Swal.fire({icon: 'warning', text: 'يرجى كتابة المكان الفعلي', background:'#1a1f2c', color:'#fff'});
+            if(isOther && !actualLoc) return Swal.fire({icon: 'warning', text: 'يرجى كتابة المكان الفعلي الذي امتحنت فيه!', background:'#1a1f2c', color:'#fff'});
             document.getElementById('step-1').classList.remove('active'); document.getElementById('step-2').classList.add('active');
         }
+
         function updateCharCount() {
             const len = document.getElementById('wiz-prob').value.length;
             document.getElementById('char-count').innerText = `${len} / 100`;
             document.getElementById('char-count').style.color = len >= 100 ? '#EF4444' : '#9CA3AF';
         }
+
         async function submitWizard() {
-            const name = document.getElementById('wiz-name').value, prob = document.getElementById('wiz-prob').value;
+            const prob = document.getElementById('wiz-prob').value;
             const actualCom = document.querySelectorAll('input[name="loc"]')[1].checked ? document.getElementById('wiz-actual-com').value : currentAssignedCom;
-            if(!prob) return Swal.fire({icon: 'warning', text: 'يرجى كتابة الشكوى', background:'#1a1f2c', color:'#fff'});
+            
+            if(!prob) return Swal.fire({icon: 'warning', text: 'يرجى كتابة تفاصيل الشكوى أولاً.', background:'#1a1f2c', color:'#fff'});
 
             Swal.fire({title: 'جاري الإرسال...', background:'#1a1f2c', color:'#fff', didOpen: () => Swal.showLoading()});
-            const res = await fetch('/api/submit-complaint', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ subject_id: currentSubId, subject_name: currentSubName, student_id: currentStudentID, student_name: name, assigned_committee: currentAssignedCom, actual_committee: actualCom, problem: prob }) });
-            const data = await res.json();
-            if(data.status === 'success') {
-                closeWizard();
-                Swal.fire({ html: `<i class="fas fa-shield-check fa-4x" style="color:var(--gold); margin-bottom:15px;"></i><h2 style="color:#fff;">تم استلام شكواك</h2><div class="tracking-code">${data.tracking_id}</div><p style="color:#EF4444; font-size:14px;">احتفظ بهذا الكود وتأكد من نسخه لتتبع رد الإدارة.</p>`, background: '#1a1f2c', confirmButtonColor: '#FFB300', confirmButtonText: 'تم النسخ' });
+            
+            try {
+                const res = await fetch('/api/submit-complaint', { 
+                    method: 'POST', headers: {'Content-Type': 'application/json'}, 
+                    body: JSON.stringify({ 
+                        subject_id: currentSubId, subject_name: currentSubName, 
+                        student_id: localStorage.getItem('drselem_student_id'), 
+                        student_name: localStorage.getItem('drselem_student_name'), 
+                        assigned_committee: currentAssignedCom, actual_committee: actualCom, problem: prob 
+                    }) 
+                });
+                const data = await res.json();
+                
+                if(data.status === 'success') {
+                    closeWizard();
+                    Swal.fire({ html: `<i class="fas fa-shield-check fa-4x" style="color:var(--gold); margin-bottom:15px;"></i><h2 style="color:#fff;">تم استلام شكواك</h2><div class="tracking-code">${data.tracking_id}</div><p style="color:#EF4444; font-size:14px;">احتفظ بهذا الكود وتأكد من نسخه لتتبع رد الإدارة.</p>`, background: '#1a1f2c', confirmButtonColor: '#FFB300', confirmButtonText: 'تم النسخ' });
+                } else {
+                    Swal.fire({icon: 'error', text: data.message, background:'#1a1f2c', color:'#fff'});
+                }
+            } catch (e) {
+                Swal.fire({icon: 'error', text: 'حدث خطأ أثناء الإرسال.', background:'#1a1f2c', color:'#fff'});
             }
         }
 
         async function openTrackModal() {
-            const { value: trackId } = await Swal.fire({ title: 'تتبع الشكوى', input: 'text', inputPlaceholder: 'اكتب كود التتبع...', background: '#1a1f2c', color: '#fff', confirmButtonText: 'استعلام', confirmButtonColor: '#FFB300' });
+            const { value: trackId } = await Swal.fire({ title: 'تتبع الشكوى', input: 'text', inputPlaceholder: 'اكتب كود التتبع هنا...', background: '#1a1f2c', color: '#fff', confirmButtonText: 'استعلام', confirmButtonColor: '#FFB300' });
             if (trackId) {
                 Swal.fire({title: 'جاري البحث...', background:'#1a1f2c', color:'#fff', didOpen: () => Swal.showLoading()});
                 const res = await fetch('/api/track-complaint', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({tracking_id: trackId}) });
@@ -230,10 +442,9 @@
                     } else {
                         statusHtml = `<div style="background:rgba(255,179,0,0.1); border:1px dashed var(--gold); padding:15px; border-radius:10px; margin-top:20px; color:var(--gold);"><i class="fas fa-clock"></i> قيد المراجعة لدى الإدارة.</div>`;
                     }
-
-                    Swal.fire({ title: `الشكوى: ${c.subject_name}`, html: `<div style="text-align:right; font-size:14px; color:#E5E7EB;"><p><strong style="color:var(--text-muted);">الشكوى:</strong> ${c.problem}</p></div>${statusHtml}`, background: '#1a1f2c', color: '#fff', confirmButtonColor: '#FFB300' });
+                    Swal.fire({ title: `الشكوى: ${c.subject_name}`, html: `<div style="text-align:right; font-size:14px; color:#E5E7EB;"><p><strong style="color:var(--text-muted);">الشكوى التي قدمتها:</strong> ${c.problem}</p></div>${statusHtml}`, background: '#1a1f2c', color: '#fff', confirmButtonColor: '#FFB300' });
                 } else {
-                    Swal.fire({icon: 'error', title: 'خطأ', text: data.message, background: '#1a1f2c', color: '#fff'});
+                    Swal.fire({icon: 'error', title: 'عفواً', text: data.message, background: '#1a1f2c', color: '#fff'});
                 }
             }
         }
