@@ -55,9 +55,33 @@
         .mobile-header { display: none; background: var(--bg-card); padding: 15px 20px; border-radius: 15px; margin-bottom: 20px; border: 1px solid var(--border); justify-content: space-between; align-items: center; box-shadow: 0 5px 15px rgba(0,0,0,0.3);}
         .menu-toggle { background: transparent; border: none; color: var(--gold); font-size: 24px; cursor: pointer; padding: 0 10px;}
 
-        .committee-filters { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 15px; border-bottom: 1px solid var(--border); scrollbar-width: none;}
+        /* التعديل الجذري لحل مشكلة السكرول وقص العناصر في اللغة العربية */
+        .committee-filters { 
+            display: flex; 
+            gap: 10px; 
+            overflow-x: auto; 
+            padding-bottom: 10px; 
+            margin-bottom: 15px; 
+            border-bottom: 1px solid var(--border); 
+            scrollbar-width: none; 
+            -webkit-overflow-scrolling: touch;
+            flex-wrap: nowrap;
+            max-width: 100%;
+        }
         .committee-filters::-webkit-scrollbar { display: none; }
-        .com-btn { background: var(--bg-card); border: 1px solid var(--border); color: var(--text-muted); padding: 8px 15px; border-radius: 20px; font-size: 13px; font-weight: bold; cursor: pointer; transition: 0.3s; white-space: nowrap;}
+        .com-btn { 
+            background: var(--bg-card); 
+            border: 1px solid var(--border); 
+            color: var(--text-muted); 
+            padding: 8px 15px; 
+            border-radius: 20px; 
+            font-size: 13px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            transition: 0.3s; 
+            white-space: nowrap; 
+            flex-shrink: 0; /* لمنع انضغاط الأزرار */
+        }
         .com-btn:hover { border-color: var(--gold); color: #fff; }
         .com-btn.active { background: rgba(16, 185, 129, 0.1); border-color: #10B981; color: #10B981; }
 
@@ -155,7 +179,7 @@
                 <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:15px; background:var(--bg-card); padding:10px; border-radius:12px; border:1px solid var(--border);">
                     <button class="btn btn-green super-only" onclick="addSubject()"><i class="fas fa-plus"></i> إضافة مادة جديدة</button>
                     
-                    <div class="committee-filters" id="subject-nav-filters" style="margin-bottom:0; padding-bottom:0; border:none; flex:1; justify-content:flex-end;">
+                    <div class="committee-filters" id="subject-nav-filters" style="margin-bottom:0; padding-bottom:0; border:none; flex:1; min-width: 0;">
                         <button class="com-btn active" onclick="filterSubjectsTab('all', this)">الكل</button>
                         <button class="com-btn" onclick="filterSubjectsTab('الفرقة الأولى', this)">فرقة 1</button>
                         <button class="com-btn" onclick="filterSubjectsTab('الفرقة الثانية', this)">فرقة 2</button>
