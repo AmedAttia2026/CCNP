@@ -230,10 +230,10 @@
                 <div id="step-2" class="wizard-step">
                     <h2 style="color:#fff; text-align:center; margin-bottom:15px; font-size: 18px;">تفاصيل الشكوى</h2>
                     <p style="text-align:right; color:var(--gold); font-size:13px; margin-bottom:8px;">المادة: <span id="wiz-sub-name" style="color:#fff;"></span></p>
-                    <p style="text-align:right; color:var(--text-muted); font-size:13px; margin-bottom:10px;">اكتب مشكلتك باختصار (بحد أقصى 100 حرف):</p>
+                    <p style="text-align:right; color:var(--text-muted); font-size:13px; margin-bottom:10px;">اكتب مشكلتك باختصار (بحد أقصى 150 حرف):</p>
                     
-                    <textarea id="wiz-prob" class="input-dark" style="height:100px; resize:none;" maxlength="100" oninput="updateCharCount()" placeholder="مثال: لم أجد درجاتي مسجلة في الميدتيرم..."></textarea>
-                    <div class="char-counter" id="char-count">0 / 100</div>
+                    <textarea id="wiz-prob" class="input-dark" style="height:100px; resize:none;" maxlength="150" oninput="updateCharCount()" placeholder="مثال: لم أجد درجاتي مسجلة في الميدتيرم..."></textarea>
+                    <div class="char-counter" id="char-count">0 / 150</div>
 
                     <div class="wizard-btns">
                         <button class="btn-primary" onclick="submitWizard()">إرسال الشكوى <i class="fas fa-paper-plane"></i></button>
@@ -342,9 +342,10 @@
                         if(sub.department === 'Network') badgeColor = '#EF4444';
                         
                         const deptLabel = sub.department && sub.department !== 'عام (IT)' ? ` - ${sub.department}` : '';
+                        const isComplaintsOpen = sub.complaints_open !== false;
                         
                         return `
-                        <div class="subject-card" onclick="checkMyID('${sub.id}', '${sub.name}')">
+                        <div class="subject-card" onclick="checkMyID('${sub.id}', '${sub.name}', ${isComplaintsOpen})">
                             <img src="${sub.image}" alt="subject">
                             <h2 class="sub-title">${sub.name}</h2>
                             <span class="sub-badge" style="color:${badgeColor};">${sub.year}${deptLabel}</span>
@@ -357,7 +358,7 @@
             }
         }
 
-        async function checkMyID(subId, subName) {
+        async function checkMyID(subId, subName, isComplaintsOpen) {
             const stId = localStorage.getItem('drselem_student_id');
             Swal.fire({title: 'جاري البحث...', background:'#1a1f2c', color:'#fff', didOpen: () => Swal.showLoading()});
             
@@ -370,11 +371,18 @@
                 const data = await res.json();
 
                 if (data.status === 'success') {
+                    const closedNotice = !isComplaintsOpen ? `<p style="color:#EF4444; font-size:12px; margin-top:10px;"><i class="fas fa-lock"></i> تم إغلاق باب الشكاوى لهذه المادة.</p>` : '';
+
                     Swal.fire({
-                        html: `<i class="fas fa-check-circle fa-3x" style="color:#10B981; margin-bottom:15px;"></i><h2 style="color:var(--gold); font-weight:bold; font-size:18px;">${subName}</h2><div style="background:rgba(16, 185, 129, 0.1); padding:15px; border-radius:12px; border:1px solid #10B981; margin:15px 0;"><p style="color:#10B981; font-size:13px; margin-bottom:5px;">مكان لجنتك هو:</p><h2 style="color:#fff; font-weight:900; font-size:clamp(20px, 6vw, 26px); line-height:1.4;">${data.committee_name}</h2></div>`,
-                        background: '#1a1f2c', showDenyButton: true, confirmButtonColor: '#FFB300', confirmButtonText: 'حسناً، شكراً', denyButtonColor: '#EF4444', denyButtonText: 'لدي مشكلة'
+                        html: `<i class="fas fa-check-circle fa-3x" style="color:#10B981; margin-bottom:15px;"></i><h2 style="color:var(--gold); font-weight:bold; font-size:18px;">${subName}</h2><div style="background:rgba(16, 185, 129, 0.1); padding:15px; border-radius:12px; border:1px solid #10B981; margin:15px 0;"><p style="color:#10B981; font-size:13px; margin-bottom:5px;">مكان لجنتك هو:</p><h2 style="color:#fff; font-weight:900; font-size:clamp(20px, 6vw, 26px); line-height:1.4;">${data.committee_name}</h2></div>${closedNotice}`,
+                        background: '#1a1f2c', 
+                        showDenyButton: isComplaintsOpen,
+                        confirmButtonColor: '#FFB300', 
+                        confirmButtonText: 'حسناً، شكراً', 
+                        denyButtonColor: '#EF4444', 
+                        denyButtonText: 'لدي مشكلة'
                     }).then((result) => {
-                        if (result.isDenied) openWizard(subId, subName, data.committee_name);
+                        if (result.isDenied && isComplaintsOpen) openWizard(subId, subName, data.committee_name);
                     });
                 } else {
                     Swal.fire({
@@ -417,8 +425,8 @@
 
         function updateCharCount() {
             const len = document.getElementById('wiz-prob').value.length;
-            document.getElementById('char-count').innerText = `${len} / 100`;
-            document.getElementById('char-count').style.color = len >= 100 ? '#EF4444' : '#9CA3AF';
+            document.getElementById('char-count').innerText = `${len} / 150`;
+            document.getElementById('char-count').style.color = len >= 150 ? '#EF4444' : '#9CA3AF';
         }
 
         async function submitWizard() {
