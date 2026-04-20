@@ -18,7 +18,6 @@ committees_col = db['committees']
 complaints_col = db['complaints']
 settings_col = db['settings']
 
-# تحسين سرعة البحث في قاعدة البيانات
 try:
     users_col.create_index("username", unique=True)
     complaints_col.create_index("tracking_id", unique=True)
@@ -144,7 +143,9 @@ def get_admin_data():
         complaints = list(complaints_col.find({"subject_id": {"$in": allowed_subs}}, {"_id": 0}))
         
         if user_role == 'doctor':
-            staff = list(users_col.find({"created_by": curr_user['username']}, {"_id": 0}))
+            staff = list(users_col.find({"role": "ta"}, {"_id": 0}))
+            for s in staff:
+                s['allowed_subjects'] = [sub for sub in s.get('allowed_subjects', []) if sub in allowed_subs]
         else:
             staff = []
 
@@ -212,7 +213,6 @@ def admin_action():
     elif action == 'manage_committee':
         if data['sub'] == 'add':
             clean_ids = list(set(re.findall(r'\b\d{7}\b', data['committee']['raw_ids'])))
-            # [التعديل هنا: تم إضافة توليد كود عشوائي فريد لمنع تداخل اللجان التي تحمل نفس عدد الطلاب]
             unique_str = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
             committees_col.insert_one({
                 "committee_id": f"COM_{unique_str}_{data['committee']['subject_id']}",
@@ -264,9 +264,6 @@ def admin_action():
             target = users_col.find_one({"username": target_username})
             
             if not target: return jsonify({"status": "error", "message": "المستخدم غير موجود!"}), 404
-            
-            if role == 'doctor' and target.get('created_by') != curr['username']:
-                return jsonify({"status": "error", "message": "غير مصرح لك بتعديل هذا المستخدم!"}), 403
                 
             new_role = new_data.get('role', target.get('role'))
             allowed_subs = new_data.get('allowed_subjects', target.get('allowed_subjects', []))
@@ -277,40 +274,62 @@ def admin_action():
                 if not all(s in my_subs for s in allowed_subs):
                     return jsonify({"status": "error", "message": "لا يمكنك إعطاء صلاحية لمعيد في مادة لا تدرسها أنت!"}), 403
 
-            if new_data['username'] != target_username and users_col.find_one({"username": new_data['username']}):
-                return jsonify({"status": "error", "message": "اسم المستخدم الجديد مستخدم بالفعل!"}), 400
+                target_existing_subs = target.get('allowed_subjects', [])
+                subs_not_mine = [s for s in target_existing_subs if s not in my_subs]
+                final_allowed_subs = subs_not_mine + allowed_subs
+            else:
+                final_allowed_subs = allowed_subs
 
-            old_name = target.get('name')
-            new_name = new_data.get('name')
+            is_owner = (role == 'super_admin') or (target.get('created_by') == curr['username'])
 
-            update_fields = {
-                "name": new_name,
-                "username": new_data['username'],
-                "role": new_role,
-                "allowed_subjects": allowed_subs
-            }
-            if new_data.get('password') and new_data['password'].strip() != '':
-                update_fields['password'] = new_data['password']
+            if is_owner:
+                if new_data['username'] != target_username and users_col.find_one({"username": new_data['username']}):
+                    return jsonify({"status": "error", "message": "اسم المستخدم الجديد مستخدم بالفعل!"}), 400
 
-            users_col.update_one({"username": target_username}, {"$set": update_fields})
+                old_name = target.get('name')
+                new_name = new_data.get('name')
 
-            if old_name != new_name:
-                subjects_col.update_many({"added_by": old_name}, {"$set": {"added_by": new_name}})
-                committees_col.update_many({"added_by": old_name}, {"$set": {"added_by": new_name}})
-                complaints_col.update_many({"replied_by": old_name}, {"$set": {"replied_by": new_name}})
+                update_fields = {
+                    "name": new_name,
+                    "username": new_data['username'],
+                    "role": new_role,
+                    "allowed_subjects": final_allowed_subs
+                }
+                if new_data.get('password') and new_data['password'].strip() != '':
+                    update_fields['password'] = new_data['password']
+
+                users_col.update_one({"username": target_username}, {"$set": update_fields})
+
+                if old_name != new_name:
+                    subjects_col.update_many({"added_by": old_name}, {"$set": {"added_by": new_name}})
+                    committees_col.update_many({"added_by": old_name}, {"$set": {"added_by": new_name}})
+                    complaints_col.update_many({"replied_by": old_name}, {"$set": {"replied_by": new_name}})
+                    
+                if target_username != new_data['username']:
+                    users_col.update_many({"created_by": target_username}, {"$set": {"created_by": new_data['username']}})
+                    if target_username == curr['username']:
+                        session['admin']['username'] = new_data['username']
                 
-            if target_username != new_data['username']:
-                users_col.update_many({"created_by": target_username}, {"$set": {"created_by": new_data['username']}})
-                if target_username == curr['username']:
-                    session['admin']['username'] = new_data['username']
-            
-            if old_name != new_name and target_username == curr['username']:
-                 session['admin']['name'] = new_name
+                if old_name != new_name and target_username == curr['username']:
+                     session['admin']['name'] = new_name
+            else:
+                update_fields = {
+                    "allowed_subjects": final_allowed_subs
+                }
+                users_col.update_one({"username": target_username}, {"$set": update_fields})
 
         elif data['sub'] == 'delete': 
             target = users_col.find_one({"username": data['username']})
-            if role == 'doctor' and target.get('created_by') != curr['username']:
-                return jsonify({"status": "error", "message": "لا يمكنك حذف معيد لا يتبعك!"}), 403
+            if role == 'doctor':
+                if target.get('created_by') != curr['username']:
+                    return jsonify({"status": "error", "message": "لا يمكنك حذف هذا المعيد نهائياً لأنك لست من قمت بإنشائه! يمكنك فقط إزالته من موادك عبر تعديل الصلاحيات."}), 403
+                
+                target_subs = target.get('allowed_subjects', [])
+                my_subs = curr_db.get('allowed_subjects', [])
+                remaining = [s for s in target_subs if s not in my_subs]
+                if len(remaining) > 0:
+                    return jsonify({"status": "error", "message": "لا يمكنك حذف المعيد نهائياً لأنه أصبح مرتبطاً بمواد دكاترة آخرين! يرجى إزالة صلاحياته من موادك فقط."}), 403
+            
             users_col.delete_one({"username": data['username']})
             
     elif action == 'reply_complaint':
