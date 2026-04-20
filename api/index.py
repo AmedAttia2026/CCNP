@@ -18,7 +18,7 @@ committees_col = db['committees']
 complaints_col = db['complaints']
 settings_col = db['settings']
 
-# --- التعديلات الجديدة: إنشاء الفهارس (Indexes) لتسريع البحث بنسبة تتخطى 90% ---
+# تحسين سرعة البحث في قاعدة البيانات
 try:
     users_col.create_index("username", unique=True)
     complaints_col.create_index("tracking_id", unique=True)
@@ -26,11 +26,8 @@ try:
 except:
     pass
 
-# [التعديل الجديد]: نظام الكاش لتخفيف الضغط على قاعدة البيانات
 SYSTEM_IS_OPEN_CACHE = None
 
-# [التعديل الجديد]: إنشاء حساب الآدمن الرئيسي فقط إذا لم يكن موجوداً
-# هذا يمنع إعادة تعيين الباسورد في كل مرة يعمل فيها السيرفر
 if not users_col.find_one({"role": "super_admin"}):
     users_col.insert_one({
         "role": "super_admin",
@@ -215,8 +212,10 @@ def admin_action():
     elif action == 'manage_committee':
         if data['sub'] == 'add':
             clean_ids = list(set(re.findall(r'\b\d{7}\b', data['committee']['raw_ids'])))
+            # [التعديل هنا: تم إضافة توليد كود عشوائي فريد لمنع تداخل اللجان التي تحمل نفس عدد الطلاب]
+            unique_str = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
             committees_col.insert_one({
-                "committee_id": "COM_" + str(len(clean_ids)) + "_" + data['committee']['subject_id'],
+                "committee_id": f"COM_{unique_str}_{data['committee']['subject_id']}",
                 "subject_id": data['committee']['subject_id'],
                 "committee_name": data['committee']['name'],
                 "ids": clean_ids, "added_by": curr['name']
@@ -336,5 +335,4 @@ def admin_action():
     return jsonify({"status": "success"})
 
 if __name__ == '__main__':
-    # لتشغيل السيرفر في وضع التطوير (للإنتاج استخدم Gunicorn)
     app.run(port=8080)
