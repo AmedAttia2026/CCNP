@@ -205,7 +205,18 @@ def admin_action():
         if role != 'super_admin':
             return jsonify({"status": "error", "message": "غير مصرح لك بإدارة المواد!"}), 403
             
-        if data['sub'] == 'add': subjects_col.insert_one({**data['subject'], "added_by": curr['name']})
+        if data['sub'] == 'add': 
+            subjects_col.insert_one({**data['subject'], "added_by": curr['name']})
+        elif data['sub'] == 'edit':
+            update_data = {
+                "name": data['subject']['name'],
+                "year": data['subject']['year'],
+                "department": data['subject']['department']
+            }
+            if 'image' in data['subject']:
+                update_data['image'] = data['subject']['image']
+                
+            subjects_col.update_one({"id": data['subject']['id']}, {"$set": update_data})
         elif data['sub'] == 'delete':
             subjects_col.delete_one({"id": data['id']})
             committees_col.delete_many({"subject_id": data['id']})
