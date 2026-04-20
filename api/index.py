@@ -17,11 +17,13 @@ subjects_col = db['subjects']
 committees_col = db['committees']
 complaints_col = db['complaints']
 settings_col = db['settings']
+students_col = db['students']
 
 try:
     users_col.create_index("username", unique=True)
     complaints_col.create_index("tracking_id", unique=True)
     committees_col.create_index([("subject_id", 1), ("ids", 1)])
+    students_col.create_index("student_id", unique=True)
 except:
     pass
 
@@ -53,6 +55,61 @@ def index():
     if not check_system_open():
         return """<!doctype html><html lang=en><title>404 Not Found</title><h1>Not Found</h1><p>The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.</p></html>""", 404
     return render_template('index.html')
+
+@app.route('/api/student-login', methods=['POST'])
+def student_login():
+    if not check_system_open(): return jsonify({"status": "error", "message": "النظام مغلق حالياً."}), 403
+    data = request.json
+    s_id = str(data.get('student_id')).strip()
+    pwd = str(data.get('password')).strip()
+    
+    student = students_col.find_one({"student_id": s_id, "password": pwd}, {"_id": 0})
+    if student:
+        return jsonify({"status": "success", "student": student})
+    else:
+        return jsonify({"status": "error", "message": "رقم الـ ID أو كلمة المرور غير صحيحة!"}), 401
+
+@app.route('/api/student-action', methods=['POST'])
+def student_action():
+    if not check_system_open(): return jsonify({"status": "error", "message": "النظام مغلق حالياً."}), 403
+    data = request.json
+    action = data.get('action')
+    s_id = str(data.get('student_id')).strip()
+
+    if action == 'change_password':
+        old_p = str(data.get('old_password', '')).strip()
+        new_p = str(data.get('new_password', '')).strip()
+        
+        student = students_col.find_one({"student_id": s_id, "password": old_p})
+        if not student:
+            return jsonify({"status": "error", "message": "كلمة المرور الحالية غير صحيحة!"}), 400
+            
+        students_col.update_one({"student_id": s_id}, {"$set": {"password": new_p}})
+        return jsonify({"status": "success"})
+        
+    elif action == 'get_complaints':
+        my_complaints = list(complaints_col.find({"student_id": s_id}, {"_id": 0}))
+        my_complaints.reverse()
+        return jsonify({"status": "success", "complaints": my_complaints})
+        
+    elif action == 'edit_complaint':
+        tracking_id = data.get('tracking_id')
+        new_prob = data.get('new_problem')
+        comp = complaints_col.find_one({"tracking_id": tracking_id, "student_id": s_id})
+        if comp and comp.get('status') == 'pending':
+            complaints_col.update_one({"tracking_id": tracking_id}, {"$set": {"problem": new_prob[:150]}})
+            return jsonify({"status": "success"})
+        return jsonify({"status": "error", "message": "لا يمكن تعديل هذه الشكوى الآن."}), 400
+        
+    elif action == 'delete_complaint':
+        tracking_id = data.get('tracking_id')
+        comp = complaints_col.find_one({"tracking_id": tracking_id, "student_id": s_id})
+        if comp and comp.get('status') == 'pending':
+            complaints_col.delete_one({"tracking_id": tracking_id})
+            return jsonify({"status": "success"})
+        return jsonify({"status": "error", "message": "لا يمكن حذف هذه الشكوى."}), 400
+        
+    return jsonify({"status": "error", "message": "إجراء غير معروف"}), 400
 
 @app.route('/api/get-subjects')
 def get_subjects():
@@ -99,15 +156,7 @@ def submit_complaint():
         "status": "pending",
         "admin_reply": ""
     })
-    return jsonify({"status": "success", "tracking_id": tracking_id})
-
-@app.route('/api/track-complaint', methods=['POST'])
-def track_complaint():
-    if not check_system_open(): return jsonify({"status": "error", "message": "النظام مغلق حالياً."}), 403
-    tracking_id = request.json.get('tracking_id').strip().upper()
-    complaint = complaints_col.find_one({"tracking_id": tracking_id}, {"_id": 0})
-    if complaint: return jsonify({"status": "success", "complaint": complaint})
-    return jsonify({"status": "error", "message": "رقم التتبع غير صحيح أو غير موجود."})
+    return jsonify({"status": "success"})
 
 @app.route('/auth-gateway-vip-x9v2-pL7q-2026', methods=['GET', 'POST'])
 def login():
@@ -136,11 +185,13 @@ def get_admin_data():
         committees = list(committees_col.find({}, {"_id": 0}))
         complaints = list(complaints_col.find({}, {"_id": 0}))
         staff = list(users_col.find({"role": {"$ne": "super_admin"}}, {"_id": 0}))
+        students = list(students_col.find({}, {"_id": 0}))
     else:
         allowed_subs = curr_user.get('allowed_subjects', [])
         subjects = list(subjects_col.find({"id": {"$in": allowed_subs}}, {"_id": 0}))
         committees = list(committees_col.find({"subject_id": {"$in": allowed_subs}}, {"_id": 0}))
         complaints = list(complaints_col.find({"subject_id": {"$in": allowed_subs}}, {"_id": 0}))
+        students = []
         
         if user_role == 'doctor':
             staff = list(users_col.find({"role": "ta"}, {"_id": 0}))
@@ -155,7 +206,8 @@ def get_admin_data():
         "subjects": subjects, 
         "committees": committees, 
         "staff": staff, 
-        "complaints": complaints, 
+        "complaints": complaints,
+        "students": students,
         "currentAdmin": session['admin'],
         "system_open": system_open
     })
@@ -221,6 +273,72 @@ def admin_action():
             subjects_col.delete_one({"id": data['id']})
             committees_col.delete_many({"subject_id": data['id']})
             
+    elif action == 'manage_student':
+        if role != 'super_admin': return jsonify({"status": "error", "message": "غير مصرح لك!"}), 403
+        
+        if data['sub'] == 'add_bulk':
+            year = data['year']
+            dept = data['dept']
+            raw_lines = data['raw_data'].strip().split('\n')
+            inserted_count = 0
+            
+            for line in raw_lines:
+                parts = line.split(',')
+                if len(parts) >= 3:
+                    s_name = parts[0].strip()
+                    s_id = parts[1].strip()
+                    s_pass = parts[2].strip()
+                    s_email = f"{s_id}@batechu.com"
+                    
+                    if len(s_id) == 7 and s_id.isdigit():
+                        students_col.update_one(
+                            {"student_id": s_id},
+                            {"$set": {
+                                "name": s_name,
+                                "student_id": s_id,
+                                "email": s_email,
+                                "password": s_pass,
+                                "year": year,
+                                "department": dept
+                            }},
+                            upsert=True
+                        )
+                        inserted_count += 1
+            return jsonify({"status": "success", "message": f"تم إضافة/تحديث {inserted_count} طالب بنجاح."})
+            
+        elif data['sub'] == 'edit':
+            old_id = data['old_id']
+            s_name = data['name']
+            s_id = data['student_id']
+            s_pass = data['password']
+            year = data['year']
+            dept = data['dept']
+            s_email = f"{s_id}@batechu.com"
+            
+            if old_id != s_id and students_col.find_one({"student_id": s_id}):
+                return jsonify({"status": "error", "message": "رقم الـ ID الجديد مستخدم بالفعل لطالب آخر!"}), 400
+                
+            students_col.update_one(
+                {"student_id": old_id},
+                {"$set": {
+                    "name": s_name,
+                    "student_id": s_id,
+                    "email": s_email,
+                    "password": s_pass,
+                    "year": year,
+                    "department": dept
+                }}
+            )
+            return jsonify({"status": "success"})
+
+        elif data['sub'] == 'delete':
+            students_col.delete_one({"student_id": data['student_id']})
+            return jsonify({"status": "success"})
+            
+        elif data['sub'] == 'wipe_filter':
+            students_col.delete_many({"year": data['year'], "department": data['dept']})
+            return jsonify({"status": "success"})
+
     elif action == 'manage_committee':
         if data['sub'] == 'add':
             clean_ids = list(set(re.findall(r'\b\d{7}\b', data['committee']['raw_ids'])))
@@ -358,6 +476,7 @@ def admin_action():
             subjects_col.delete_many({})
             committees_col.delete_many({})
             complaints_col.delete_many({})
+            students_col.delete_many({})
             return jsonify({"status": "success", "message": "تم تدمير جميع بيانات النظام بنجاح"})
         else:
             return jsonify({"status": "error", "message": "كلمة المرور غير صحيحة، تم إحباط العملية"}), 401
