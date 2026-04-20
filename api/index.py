@@ -86,8 +86,13 @@ def student_action():
             
         students_col.update_one({"student_id": s_id}, {"$set": {"password": new_p}})
         return jsonify({"status": "success"})
+    
+    # [التأمين الجديد]: التحقق من الباسورد لأي عملية أخرى للطالب
+    pwd = str(data.get('password', '')).strip()
+    if not students_col.find_one({"student_id": s_id, "password": pwd}):
+        return jsonify({"status": "error", "message": "انتهت الجلسة أو تم تغيير بياناتك. يرجى تسجيل الدخول مجدداً."}), 401
         
-    elif action == 'get_complaints':
+    if action == 'get_complaints':
         my_complaints = list(complaints_col.find({"student_id": s_id}, {"_id": 0}))
         my_complaints.reverse()
         return jsonify({"status": "success", "complaints": my_complaints})
@@ -124,6 +129,11 @@ def check_id():
     subject_id = data.get('subject_id')
     student_id = str(data.get('student_id')).strip()
     
+    # [التأمين الجديد]: التأكد من الباسورد قبل السماح للطالب بمعرفة لجنته
+    pwd = str(data.get('password', '')).strip()
+    if not students_col.find_one({"student_id": student_id, "password": pwd}):
+        return jsonify({"status": "error", "message": "انتهت الجلسة أو تم تغيير بياناتك. يرجى تسجيل الدخول مجدداً."}), 401
+    
     if len(student_id) != 7 or not student_id.isdigit():
         return jsonify({"status": "error", "message": "رقم الـ ID يجب أن يكون 7 أرقام فقط"}), 400
         
@@ -138,6 +148,12 @@ def submit_complaint():
     if not check_system_open(): return jsonify({"status": "error", "message": "النظام مغلق حالياً."}), 403
     data = request.json
     
+    # [التأمين الجديد]: التحقق من الباسورد قبل تسجيل الشكوى
+    student_id = data.get('student_id')
+    pwd = str(data.get('password', '')).strip()
+    if not students_col.find_one({"student_id": student_id, "password": pwd}):
+        return jsonify({"status": "error", "message": "انتهت الجلسة أو تم تغيير بياناتك. يرجى تسجيل الدخول مجدداً."}), 401
+    
     subject = subjects_col.find_one({"id": data['subject_id']})
     if subject and not subject.get('complaints_open', True):
         return jsonify({"status": "error", "message": "عفواً، تم إغلاق باب استقبال الشكاوى لهذه المادة من قبل دكتور المادة."}), 403
@@ -148,7 +164,7 @@ def submit_complaint():
         "tracking_id": tracking_id,
         "subject_id": data['subject_id'],
         "subject_name": data['subject_name'],
-        "student_id": data['student_id'],
+        "student_id": student_id,
         "student_name": data['student_name'],
         "assigned_committee": data['assigned_committee'],
         "actual_committee": data['actual_committee'],
