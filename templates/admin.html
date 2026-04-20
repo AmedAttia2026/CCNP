@@ -132,7 +132,7 @@
                 
                 <hr style="border:0; border-top:1px solid var(--border); margin:15px 10px;">
 
-                <li id="tab-staff" onclick="switchTab('staff', this)" class="staff-manager-only"><i class="fas fa-users-cog icon-main"></i> إدارة الطاقم</li>
+                <li id="tab-staff" onclick="switchTab('staff', this)"><i class="fas fa-users-cog icon-main"></i> إدارة الطاقم / حسابي</li>
 
                 <li class="wipe-btn-li super-only" onclick="wipeDatabase()"><i class="fas fa-dumpster-fire icon-main"></i> مسح الداتابيز بالكامل</li>
                 <li style="color:#EF4444; margin-top:5px;" onclick="location.href='/logout-gateway-vip-x9v2-pL7q-2026'"><i class="fas fa-power-off icon-main"></i> تسجيل خروج</li>
@@ -216,9 +216,12 @@
                 </div>
             </div>
 
-            <div id="staff" class="content-section staff-manager-only">
-                <button class="btn btn-green" onclick="addStaff()"><i class="fas fa-user-plus"></i> إضافة عضو جديد للنظام</button>
-                <div class="table-container">
+            <div id="staff" class="content-section">
+                <div style="display:flex; gap:10px; margin-bottom:15px; flex-wrap:wrap;">
+                    <button class="btn btn-green staff-manager-only" onclick="addStaff()"><i class="fas fa-user-plus"></i> إضافة عضو جديد للنظام</button>
+                    <button class="btn btn-blue" onclick="changeMyPassword()"><i class="fas fa-key"></i> تغيير كلمة المرور (حسابي)</button>
+                </div>
+                <div class="table-container staff-manager-only">
                     <table>
                         <thead><tr><th>الاسم</th><th>اسم الدخول</th><th>المواد المسموحة</th><th>الصفة</th><th>إجراء</th></tr></thead>
                         <tbody id="staff-list"></tbody>
@@ -296,6 +299,7 @@
             document.getElementById('welcome-text').innerHTML = `مرحباً، ${me.name} ${roleBadge}`;
 
             if(me.role !== 'super_admin') document.querySelectorAll('.super-only').forEach(e => e.style.display = 'none');
+            // إخفاء إدارة الموظفين فقط عن المعيدين (حتى يظهر لهم زر الباسورد الخاص بهم فقط)
             if(me.role === 'ta') document.querySelectorAll('.staff-manager-only').forEach(e => e.style.display = 'none');
 
             if(me.role === 'super_admin' || me.role === 'doctor') {
@@ -344,6 +348,37 @@
 
             if(!document.querySelector('.content-section.active')) {
                 document.getElementById('tab-pending').click();
+            }
+        }
+
+        // التعديل هنا: الدالة الخاصة بتغيير كلمة المرور للمستخدم المفتوح حالياً
+        async function changeMyPassword() {
+            const { value: formValues } = await Swal.fire({
+                ...swalDark,
+                title: 'تغيير كلمة المرور الخاصة بي',
+                html: `
+                    <input id="new-pw" type="text" class="login-input" placeholder="كلمة المرور الجديدة">
+                `,
+                preConfirm: () => {
+                    const pw = document.getElementById('new-pw').value;
+                    if(!pw || pw.trim() === '') return Swal.showValidationMessage('يجب إدخال كلمة مرور جديدة');
+                    return pw;
+                }
+            });
+
+            if(formValues) {
+                Swal.fire({title: 'جاري التحديث...', background: '#1a1f2c', color: '#fff', didOpen: () => Swal.showLoading()});
+                const res = await fetch('/api/admin-action', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({action: 'change_my_password', new_password: formValues})
+                });
+                const data = await res.json();
+                if(data.status === 'success') {
+                    Swal.fire({...swalDark, icon: 'success', title: 'تم تغيير كلمة المرور بنجاح!', timer: 1500, showConfirmButton: false});
+                } else {
+                    Swal.fire({...swalDark, icon: 'error', text: data.message});
+                }
             }
         }
 
