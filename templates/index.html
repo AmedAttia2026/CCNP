@@ -44,20 +44,20 @@
         /* --- Main Container --- */
         .container { padding: 30px 20px; max-width: 1200px; margin: auto; flex: 1; width: 100%; display: flex; flex-direction: column;}
         
-        /* --- Student Banner --- */
-        .student-info-banner { background: linear-gradient(90deg, rgba(255,179,0,0.05), transparent); border-right: 4px solid var(--gold); padding: 25px 20px; border-radius: 12px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,179,0,0.1); border-top: 1px solid rgba(255,179,0,0.1);}
-        .info-right { display: flex; flex-direction: column; gap: 4px; text-align: right;}
-        .info-left { display: flex; flex-direction: column; gap: 8px; text-align: left; align-items: flex-end;}
+        /* --- Student Banner (محسّن ليحافظ على الشكل الأفقي في كل الشاشات) --- */
+        .student-info-banner { background: linear-gradient(90deg, rgba(255,179,0,0.05), transparent); border-right: 4px solid var(--gold); padding: 25px 20px; border-radius: 12px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,179,0,0.1); border-top: 1px solid rgba(255,179,0,0.1); gap: 10px;}
+        .info-right { display: flex; flex-direction: column; gap: 4px; text-align: right; width: auto;}
+        .info-left { display: flex; flex-direction: column; gap: 8px; text-align: left; align-items: flex-end; width: auto;}
         
-        .greeting-text { color: var(--text-muted); font-size: 13px; }
-        .student-name { font-size: clamp(18px, 4vw, 24px); color: var(--gold); font-weight: 900; }
-        .student-email { direction: ltr; text-align: right; color: #9CA3AF; font-size: clamp(13px, 3vw, 15px); font-family: monospace; letter-spacing: 1px; display: inline-block; width: 100%;}
+        .greeting-text { color: var(--text-muted); font-size: clamp(10px, 2vw, 13px); }
+        .student-name { font-size: clamp(14px, 3.5vw, 24px); color: var(--gold); font-weight: 900; white-space: nowrap;}
+        .student-email { direction: ltr; text-align: right; color: #9CA3AF; font-size: clamp(10px, 2.5vw, 15px); font-family: monospace; letter-spacing: 0.5px; display: inline-block; width: 100%; white-space: nowrap;}
         
-        .info-line { color: var(--text-muted); font-size: clamp(12px, 3vw, 14px); }
-        .info-value-id { color: #fff; font-family: monospace; font-size: clamp(14px, 4vw, 16px); font-weight: bold; }
-        .info-value-dept { color: #10B981; font-weight: bold; font-size: clamp(13px, 3.5vw, 15px);}
+        .info-line { color: var(--text-muted); font-size: clamp(10px, 2.5vw, 14px); white-space: nowrap;}
+        .info-value-id { color: #fff; font-family: monospace; font-size: clamp(11px, 2.8vw, 16px); font-weight: bold; }
+        .info-value-dept { color: #10B981; font-weight: bold; font-size: clamp(11px, 2.8vw, 15px);}
         
-        .btn-password { padding: 8px 15px; font-size: 12px; font-weight: bold; background: transparent; border: 1px solid var(--gold); color: var(--gold); border-radius: 8px; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 6px;}
+        .btn-password { padding: clamp(4px, 1vw, 8px) clamp(8px, 2vw, 15px); font-size: clamp(10px, 2vw, 12px); font-weight: bold; background: transparent; border: 1px solid var(--gold); color: var(--gold); border-radius: 8px; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 6px; white-space: nowrap;}
         .btn-password:hover { background: var(--gold); color: #000; }
 
         /* --- Grid & Subject Cards --- */
@@ -114,6 +114,8 @@
         .char-counter { text-align: left; font-size: 12px; color: var(--text-muted); margin-top: -10px; margin-bottom: 15px; font-family: monospace;}
         
         .swal2-popup { border-radius: 16px !important; background: #1a1f2c !important; color: #fff !important; width: 90% !important; max-width: 400px !important; padding: 20px !important; }
+        .swal2-input { text-align: right !important; direction: rtl; font-weight: bold; background: #0d1117 !important; color: #fff !important; border-color: var(--border) !important;}
+        .swal2-input:focus { border-color: var(--gold) !important; box-shadow: none !important;}
         
         #loading-screen { display:none; position: fixed; inset: 0; background: rgba(6, 9, 19, 0.9); z-index: 9999; justify-content: center; align-items: center; flex-direction: column; }
         .loader { border: 4px solid rgba(255, 179, 0, 0.2); border-top: 4px solid var(--gold); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin-bottom: 15px;}
@@ -130,12 +132,10 @@
 
             .container { padding: 15px 10px; }
             
-            .student-info-banner { padding: 20px 15px; flex-direction: column; align-items: center; gap: 15px; text-align: center; }
-            .info-right { text-align: center; border-bottom: 1px dashed rgba(255,255,255,0.1); padding-bottom: 15px; width: 100%; align-items: center;}
-            .info-left { text-align: center; align-items: center; width: 100%; padding-top: 5px;}
+            /* إبقاء البانر أفقي وعدم كسره للأسفل */
+            .student-info-banner { padding: 15px 12px; flex-direction: row; }
             
-            .student-email { text-align: center; }
-            
+            /* تكبير الصور في الكروت لتكون أوضح */
             .grid-layout { grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 15px; }
             .subject-card { padding: 20px 10px; border-radius: 15px; }
             .subject-card img { width: 75px; height: 75px; margin-bottom: 12px; } 
@@ -282,13 +282,11 @@
         
         let currentSubId, currentSubName, currentAssignedCom;
 
-        // [التأمين الجديد]: التحقق من السيرفر عند كل مرة يفتح فيها الطالب الموقع
         window.onload = async () => {
             const savedID = localStorage.getItem('drselem_student_id');
             const savedPass = localStorage.getItem('drselem_student_pass');
             
             if (savedID && savedPass) {
-                // محاولة تسجيل الدخول الصامت للتأكد من أن الحساب لم يُحذف أو لم يتغير الباسورد
                 try {
                     const res = await fetch('/api/student-login', {
                         method: 'POST',
@@ -298,7 +296,6 @@
                     const data = await res.json();
                     
                     if (data.status === 'success') {
-                        // البيانات صحيحة وموجودة، ندخل للوحة التحكم
                         const s = data.student;
                         localStorage.setItem('drselem_student_name', s.name);
                         localStorage.setItem('drselem_student_year', s.year);
@@ -309,12 +306,9 @@
                         document.getElementById('main-ui').style.display = 'flex';
                         initDashboard();
                     } else {
-                        // الحساب انحذف أو الباسورد اتغير! بنمسح كل حاجة ونخليه يسجل من جديد
                         localStorage.clear();
                     }
                 } catch(e) {
-                    // لو مفيش نت أو السيرفر واقع، بنفتحله الشاشة المؤقتة بناء على اللي متخزن 
-                    // (ولكن أي محاولة لإرسال بيانات هترفض من السيرفر لأننا ضفنا حماية الباسورد هناك)
                     document.getElementById('auth-screen').style.display = 'none';
                     document.getElementById('main-ui').style.display = 'flex';
                     initDashboard();
@@ -349,7 +343,6 @@
                     localStorage.setItem('drselem_student_year', s.year);
                     localStorage.setItem('drselem_student_dept', s.department);
                     localStorage.setItem('drselem_student_email', s.email);
-                    // [التعديل هنا]: نحفظ الباسورد عشان نبعته مع أي طلب تاني كنوع من الأمان
                     localStorage.setItem('drselem_student_pass', stPass);
 
                     Swal.close();
@@ -408,7 +401,6 @@
                     const data = await res.json();
                     
                     if(data.status === 'success') {
-                        // تحديث الباسورد المخزن محلياً عشان ميطردوش بره
                         localStorage.setItem('drselem_student_pass', formValues.new_password);
                         Swal.fire({...swalDark, icon: 'success', title: 'تم تغيير كلمة المرور بنجاح!', timer: 2000, showConfirmButton: false});
                     } else {
@@ -510,7 +502,6 @@
                         if (result.isDenied && isComplaintsOpen) openWizard(subId, subName, data.committee_name);
                     });
                 } else {
-                    // إذا أرجع السيرفر خطأ 401 (يعني حساب انحذف أو باسوورد غلط) بنقوم بطرد الطالب مباشرة
                     if (data.message.includes("تسجيل الدخول")) {
                         Swal.fire({icon: 'error', title: 'تنبيه أمني', text: data.message, background:'#1a1f2c', color:'#fff', confirmButtonText: 'موافق'}).then(() => {
                             localStorage.clear(); location.reload();
