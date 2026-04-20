@@ -79,7 +79,6 @@
         .swal2-textarea, .swal2-input { background: #0d1117 !important; color: #fff !important; border: 1px solid #4a5568 !important; text-align: right; font-size: 15px !important; font-weight:bold;}
         .swal2-input:focus, .swal2-textarea:focus { border-color: var(--gold) !important; box-shadow: none !important;}
         
-        /* تنسيق للقوائم داخل الاستيراد */
         optgroup { color: var(--gold); font-weight: bold; font-style: normal; background: #1F2937; }
         optgroup option { color: #fff; font-weight: normal; background: #000;}
 
@@ -228,6 +227,7 @@
             <div id="staff" class="content-section">
                 <div style="display:flex; gap:10px; margin-bottom:15px; flex-wrap:wrap;">
                     <button class="btn btn-green staff-manager-only" onclick="addStaff()"><i class="fas fa-user-plus"></i> إضافة عضو جديد للنظام</button>
+                    <button class="btn btn-gold staff-manager-only" onclick="assignExistingTA()"><i class="fas fa-user-tag"></i> تعيين معيد مسجل مسبقاً</button>
                     <button class="btn btn-blue" onclick="changeMyPassword()"><i class="fas fa-key"></i> تغيير كلمة المرور (حسابي)</button>
                 </div>
                 <div class="table-container staff-manager-only">
@@ -246,6 +246,8 @@
         let globalCommittees = [];
         let fullComplaints = [];
         let globalStaff = [];
+        let tempSelectedTA = null;
+        let tempAvailableTAs = [];
         
         let committeeFilter = JSON.parse(localStorage.getItem('admin_committee_filter')) || { sub: '' };
         let activeSubjectsFilter = 'all';
@@ -311,9 +313,14 @@
             if(me.role === 'ta') document.querySelectorAll('.staff-manager-only').forEach(e => e.style.display = 'none');
 
             if(me.role === 'super_admin' || me.role === 'doctor') {
-                document.getElementById('staff-list').innerHTML = globalStaff.map(s => {
+                let visibleStaff = globalStaff;
+                if (me.role === 'doctor') {
+                    visibleStaff = globalStaff.filter(s => s.allowed_subjects && s.allowed_subjects.length > 0);
+                }
+
+                document.getElementById('staff-list').innerHTML = visibleStaff.map(s => {
                     let allowedNames = '-';
-                    if (s.allowed_subjects) {
+                    if (s.allowed_subjects && s.allowed_subjects.length > 0) {
                         allowedNames = s.allowed_subjects.map(subId => {
                             let fSub = globalSubjects.find(gs => gs.id === subId);
                             return fSub ? `<span style="background:rgba(255, 179, 0, 0.1); color:var(--gold); padding:2px 6px; border-radius:4px; font-size:11px; margin:2px; display:inline-block;">${fSub.name}</span>` : '';
@@ -430,7 +437,7 @@
                         </div>
                     </td>
                     <td style="color:var(--text-muted); font-size:12px;">${s.added_by}</td>
-                    <td>${me.role === 'super_admin' ? `<button class="btn btn-red" onclick="deleteAction('manage_subject', '${s.id}')"><i class="fas fa-trash"></i> حذف</button>` : '-'}</td>
+                    <td>${me.role === 'super_admin' ? `<button class="btn btn-red" onclick="executeDelete('manage_subject', '${s.id}')"><i class="fas fa-trash"></i> حذف</button>` : '-'}</td>
                 </tr>
             `}).join('');
         }
@@ -532,7 +539,7 @@
                     <td>
                         <div style="display:flex; justify-content:center; gap:5px; flex-wrap:wrap;">
                             <button class="btn btn-gold" onclick="editCommittee('${c.committee_id}')"><i class="fas fa-edit"></i> تعديل</button>
-                            <button class="btn btn-red" onclick="deleteAction('manage_committee', '${c.committee_id}')"><i class="fas fa-trash"></i> حذف</button>
+                            <button class="btn btn-red" onclick="executeDelete('manage_committee', '${c.committee_id}')"><i class="fas fa-trash"></i> حذف</button>
                         </div>
                     </td>
                 </tr>
@@ -677,7 +684,7 @@
                 } else if (tabName === 'resolved') {
                     return `<tr><td><span class="track-id">${c.tracking_id}</span></td>${studentInfo}<td>${locs}</td><td class="text-wrap-bold" style="color:#9CA3AF; font-size:12px;">${c.problem}</td><td class="reply-wrap-bold">${c.admin_reply}</td><td style="font-size:12px; color:var(--gold); font-weight:bold;">${c.replied_by}</td><td><button class="btn btn-gold" onclick="editReply('${c.tracking_id}', '${c.student_name}')"><i class="fas fa-edit"></i> تعديل</button></td></tr>`;
                 } else if (tabName === 'spam') {
-                    return `<tr><td><span class="track-id" style="color:#EF4444; border:1px solid rgba(239,68,68,0.3);">${c.tracking_id}</span></td>${studentInfo}<td>${locs}</td><td class="text-wrap-bold" style="color:#9CA3AF;">${c.problem}</td><td><div style="display:flex; justify-content:center; gap:5px; flex-direction:column;"><button class="btn btn-blue" onclick="updateComplaintStatus('${c.tracking_id}', 'restore_complaint')"><i class="fas fa-undo"></i> استرجاع</button><button class="btn btn-red" onclick="updateComplaintStatus('${c.tracking_id}', 'delete_complaint')"><i class="fas fa-trash"></i> حذف نهائي</button></div></td></tr>`;
+                    return `<tr><td><span class="track-id" style="color:#EF4444; border:1px solid rgba(239,68,68,0.3);">${c.tracking_id}</span></td>${studentInfo}<td>${locs}</td><td class="text-wrap-bold" style="color:#9CA3AF;">${c.problem}</td><td><div style="display:flex; justify-content:center; gap:5px; flex-direction:column;"><button class="btn btn-blue" onclick="updateComplaintStatus('${c.tracking_id}', 'restore_complaint')"><i class="fas fa-undo"></i> استرجاع</button><button class="btn btn-red" onclick="executeDelete('${c.tracking_id}', 'delete_complaint')"><i class="fas fa-trash"></i> حذف نهائي</button></div></td></tr>`;
                 }
             }).join('');
         }
@@ -721,13 +728,91 @@
             if(window.innerWidth <= 1024) toggleSidebar();
         }
 
+        // --- التعديل الذكي لنظام الحذف ---
         async function deleteAction(action, id, isStaff = false) {
-            if(confirm('تأكيد الحذف النهائي؟')) {
-                const res = await fetch('/api/admin-action', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(isStaff ? {action, sub: 'delete', username: id} : {action, sub: 'delete', id}) });
-                const data = await res.json();
-                if(data.status === 'error') Swal.fire({...swalDark, icon: 'error', text: data.message});
-                else await refreshData();
+            if (isStaff && action === 'manage_staff' && me.role === 'doctor') {
+                const target = globalStaff.find(s => s.username === id);
+                let mySubs = me.allowed_subjects || [];
+                let targetSubs = target.allowed_subjects || [];
+                let remaining = targetSubs.filter(s => !mySubs.includes(s));
+                
+                const isOwner = (target.created_by === me.username);
+
+                if (!isOwner) {
+                    const { isConfirmed } = await Swal.fire({
+                        ...swalDark,
+                        title: 'إزالة الصلاحيات',
+                        text: 'أنت لست من قام بإنشاء هذا المعيد. هل تريد إزالته من موادك فقط؟',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#EF4444',
+                        confirmButtonText: 'نعم، إزالة من موادي',
+                        cancelButtonText: 'إلغاء'
+                    });
+                    if (isConfirmed) await updateStaffSubjects(id, []);
+                    return;
+                }
+
+                if (remaining.length === 0) {
+                    const { isConfirmed, isDenied } = await Swal.fire({
+                        ...swalDark,
+                        title: 'إدارة المعيد',
+                        text: 'هذا المعيد لا يمتلك أي صلاحيات مع دكاترة آخرين (وأنت من قمت بإنشائه). هل تريد حذفه نهائياً من النظام أم إزالته من موادك فقط؟',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        showDenyButton: true,
+                        confirmButtonText: 'حذف نهائي',
+                        denyButtonText: 'إزالة من موادي فقط',
+                        cancelButtonText: 'إلغاء',
+                        confirmButtonColor: '#EF4444',
+                        denyButtonColor: '#FFB300'
+                    });
+
+                    if (isConfirmed) await executeDelete('manage_staff', id, true);
+                    else if (isDenied) await updateStaffSubjects(id, []);
+                } else {
+                    const { isConfirmed } = await Swal.fire({
+                        ...swalDark,
+                        title: 'إزالة الصلاحيات',
+                        text: 'لا يمكنك حذف المعيد نهائياً لأنه مرتبط بمواد دكاترة آخرين حالياً. هل تريد إزالته من موادك فقط؟',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#EF4444',
+                        confirmButtonText: 'نعم، إزالة',
+                        cancelButtonText: 'إلغاء'
+                    });
+                    if (isConfirmed) await updateStaffSubjects(id, []);
+                }
+            } else {
+                if(confirm('تأكيد الحذف النهائي؟')) {
+                    await executeDelete(action, id, isStaff);
+                }
             }
+        }
+
+        async function executeDelete(action, id, isStaff=false) {
+            Swal.fire({title: 'جاري الحذف...', background: '#1a1f2c', color: '#fff', didOpen: () => Swal.showLoading()});
+            const reqBody = isStaff ? {action, sub: 'delete', username: id} : {action, sub: 'delete', id};
+            const res = await fetch('/api/admin-action', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(reqBody) });
+            const data = await res.json();
+            if(data.status === 'error') Swal.fire({...swalDark, icon: 'error', text: data.message});
+            else { await refreshData(); Swal.fire({...swalDark, icon: 'success', title: 'تم الحذف بنجاح!', timer: 1500, showConfirmButton: false}); }
+        }
+
+        async function updateStaffSubjects(targetUsername, newSubjectsList) {
+            const target = globalStaff.find(s => s.username === targetUsername);
+            const form = {
+                name: target.name,
+                username: target.username,
+                password: "", 
+                role: target.role,
+                allowed_subjects: newSubjectsList
+            };
+            Swal.fire({title: 'جاري التحديث...', background: '#1a1f2c', color: '#fff', didOpen: () => Swal.showLoading()});
+            const res = await fetch('/api/admin-action', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action:'manage_staff', sub:'edit', old_username: targetUsername, staff:form}) });
+            const data = await res.json();
+            if(data.status === 'success') { await refreshData(); Swal.fire({...swalDark, icon: 'success', title: 'تم التحديث بنجاح!', timer: 1500, showConfirmButton: false}); }
+            else { Swal.fire({...swalDark, icon: 'error', text: data.message}); }
         }
 
         async function replyComplaint(tracking_id, student_name, existing_reply = '') {
@@ -848,24 +933,21 @@
             }
         }
 
-        // الوظيفة المحدثة: استيراد ذكي للجان (يفصل المواد بناءً على القسم والمواد العامة)
         async function copyCommitteesFromOtherSubject() {
             let activeSubId = committeeFilter.sub;
             let currentSub = globalSubjects.find(s => s.id === activeSubId);
             
             if(!currentSub) return Swal.fire({...swalDark, icon:'warning', text:'قم باختيار المادة التي تريد الاستيراد إليها أولاً!'});
 
-            // فلترة ذكية: جلب مواد نفس الفرقة التي تطابق القسم الحالي (أو المواد العامة)
             let matchingSubs = globalSubjects.filter(s => {
                 if (s.id === currentSub.id) return false; 
                 if (s.year !== currentSub.year) return false; 
-                if (currentSub.department === 'عام (IT)') return true; // العام يسحب من أي حاجة في الدفعة
+                if (currentSub.department === 'عام (IT)') return true; 
                 return s.department === currentSub.department || s.department === 'عام (IT)';
             });
 
             if(matchingSubs.length === 0) return Swal.fire({...swalDark, icon:'info', text:'لا توجد مواد مطابقة (نفس القسم أو مواد عامة) في هذه الفرقة لنقل اللجان منها.'});
 
-            // تقسيم الـ Dropdown ليكون شكله مرتب ومنطقي
             let generalOpts = matchingSubs.filter(s => s.department === 'عام (IT)').map(s => `<option value="${s.id}">${s.name} (عام / مشترك)</option>`).join('');
             let specificOpts = matchingSubs.filter(s => s.department !== 'عام (IT)').map(s => `<option value="${s.id}">${s.name} (${s.department})</option>`).join('');
 
@@ -999,6 +1081,97 @@
                     await refreshData(); 
                     Swal.fire({...swalDark, icon: 'success', title: 'تمت الإضافة بنجاح!', timer: 1500, showConfirmButton: false});
                 }
+            }
+        }
+
+        // --- نافذة اختيار المعيدين بالاسم فقط ---
+        window.filterTAList = function() {
+            const q = document.getElementById('search-ta').value.toLowerCase();
+            const items = document.querySelectorAll('.ta-item');
+            items.forEach(item => {
+                const text = item.innerText.toLowerCase();
+                item.style.display = text.includes(q) ? 'block' : 'none';
+            });
+        };
+
+        window.selectTAItem = function(el) {
+            document.querySelectorAll('.ta-item').forEach(i => {
+                i.style.background = '#1F2937';
+                i.style.border = 'none';
+            });
+            el.style.background = 'rgba(16, 185, 129, 0.1)';
+            el.style.border = '1px solid #10B981';
+            tempSelectedTA = el.getAttribute('data-id');
+        };
+
+        async function assignExistingTA() {
+            tempAvailableTAs = globalStaff.filter(s => !s.allowed_subjects || s.allowed_subjects.length === 0);
+
+            if(tempAvailableTAs.length === 0) {
+                return Swal.fire({...swalDark, icon: 'info', text: 'لا يوجد معيدين متاحين للتعيين، إما أنهم مضافون بالفعل في موادك أو لا يوجد معيدين مسجلين.'});
+            }
+
+            tempSelectedTA = null;
+
+            const { value: selectedUsername } = await Swal.fire({
+                ...swalDark,
+                title: 'تعيين معيد مسجل مسبقاً',
+                html: `
+                    <p style="text-align:right; font-size:13px; color:var(--text-muted); margin-bottom:10px;">ابحث واختر المعيد الذي تريد إضافته لموادك:</p>
+                    <input id="search-ta" class="login-input" placeholder="ابحث بالاسم هنا..." style="margin-bottom:10px; padding:10px; font-size:13px;" onkeyup="filterTAList()">
+                    <div id="ta-list-container" style="max-height: 200px; overflow-y: auto; background: #0d1117; border-radius: 12px; border: 1px solid #374151; padding: 10px; text-align: right; display: flex; flex-direction: column; gap: 5px;">
+                        ${tempAvailableTAs.map(ta => `
+                            <div class="ta-item" data-id="${ta.username}" onclick="selectTAItem(this)" style="padding: 10px; border-radius: 8px; cursor: pointer; color: #fff; background: #1F2937; transition: 0.3s; font-size:14px; font-weight:bold;">
+                                <i class="fas fa-user" style="color:var(--gold); margin-left:8px;"></i> ${ta.name}
+                            </div>
+                        `).join('')}
+                    </div>
+                `,
+                preConfirm: () => {
+                    if(!tempSelectedTA) return Swal.showValidationMessage('الرجاء اختيار معيد من القائمة أولاً!');
+                    return tempSelectedTA;
+                }
+            });
+
+            if (selectedUsername) {
+                assignSubjectsToTA(selectedUsername);
+            }
+        }
+
+        async function assignSubjectsToTA(targetUsername) {
+            const staffMember = globalStaff.find(s => s.username === targetUsername);
+            if(!staffMember) return;
+            
+            const { value: form } = await Swal.fire({ 
+                ...swalDark, width: '600px',
+                title: 'تعيين صلاحيات المواد', 
+                html: `
+                    <div style="background:rgba(255,179,0,0.1); border:1px solid rgba(255,179,0,0.3); padding:12px; border-radius:8px; margin-bottom:15px; text-align:right;">
+                        <p style="color:var(--gold); font-weight:bold; font-size:15px;"><i class="fas fa-user-graduate"></i> المعيد: ${staffMember.name}</p>
+                    </div>
+                    <p style="text-align:right; color:#9CA3AF; font-size:13px; margin-bottom:10px;">حدد المواد التي ترغب بتعيينه فيها:</p>
+                    ${getGroupedSubjectsHTML(staffMember.allowed_subjects || [])}
+                `, 
+                preConfirm: () => { 
+                    const checkedBoxes = document.querySelectorAll('.st-sub-check:checked');
+                    const allowedSubjects = Array.from(checkedBoxes).map(cb => cb.value);
+                    
+                    return { 
+                        name: staffMember.name, 
+                        username: staffMember.username, 
+                        password: "", 
+                        role: staffMember.role,
+                        allowed_subjects: allowedSubjects 
+                    }; 
+                } 
+            });
+            
+            if(form) { 
+                Swal.fire({title: 'جاري الحفظ والتحديث...', background: '#1a1f2c', color: '#fff', didOpen: () => Swal.showLoading()});
+                const res = await fetch('/api/admin-action', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action:'manage_staff', sub:'edit', old_username: targetUsername, staff:form}) }); 
+                const data = await res.json(); 
+                if(data.status === 'error') Swal.fire({...swalDark, icon: 'error', text: data.message}); 
+                else { await refreshData(); Swal.fire({...swalDark, icon: 'success', title: 'تم التعيين بنجاح!', timer: 1500, showConfirmButton: false}); }
             }
         }
 
