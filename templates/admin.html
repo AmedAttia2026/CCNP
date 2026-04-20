@@ -437,7 +437,7 @@
                         </div>
                     </td>
                     <td style="color:var(--text-muted); font-size:12px;">${s.added_by}</td>
-                    <td>${me.role === 'super_admin' ? `<button class="btn btn-red" onclick="executeDelete('manage_subject', '${s.id}')"><i class="fas fa-trash"></i> حذف</button>` : '-'}</td>
+                    <td>${me.role === 'super_admin' ? `<div style="display:flex; justify-content:center; gap:5px; flex-wrap:wrap;"><button class="btn btn-gold" onclick="editSubject('${s.id}')"><i class="fas fa-edit"></i> تعديل</button><button class="btn btn-red" onclick="executeDelete('manage_subject', '${s.id}')"><i class="fas fa-trash"></i> حذف</button></div>` : '-'}</td>
                 </tr>
             `}).join('');
         }
@@ -728,7 +728,6 @@
             if(window.innerWidth <= 1024) toggleSidebar();
         }
 
-        // --- التعديل الذكي لنظام الحذف ---
         async function deleteAction(action, id, isStaff = false) {
             if (isStaff && action === 'manage_staff' && me.role === 'doctor') {
                 const target = globalStaff.find(s => s.username === id);
@@ -854,19 +853,45 @@
         }
 
         async function addSubject() { 
+            let defaultYear = "";
+            let defaultDept = "عام (IT)";
+            
+            if (activeSubjectsFilter !== 'all') {
+                if (activeSubjectsFilter.includes('_')) {
+                    const parts = activeSubjectsFilter.split('_');
+                    defaultYear = parts[0];
+                    defaultDept = parts[1];
+                } else {
+                    defaultYear = activeSubjectsFilter;
+                }
+            }
+            
+            let yearOpts = `<option value="" disabled ${!defaultYear ? "selected" : ""}>اختر الفرقة الدراسية</option>`;
+            ["الفرقة الأولى", "الفرقة الثانية", "الفرقة الثالثة", "الفرقة الرابعة"].forEach(y => {
+                yearOpts += `<option value="${y}" ${defaultYear === y ? "selected" : ""}>${y}</option>`;
+            });
+            
+            let deptOpts = "";
+            if (defaultYear === 'الفرقة الثالثة' || defaultYear === 'الفرقة الرابعة') {
+                deptOpts += `<option value="عام (IT)" ${defaultDept === 'عام (IT)' ? 'selected' : ''}>عام (IT)</option>`;
+                deptOpts += `<option value="Software" ${defaultDept === 'Software' ? 'selected' : ''}>Software</option>`;
+                deptOpts += `<option value="Network" ${defaultDept === 'Network' ? 'selected' : ''}>Network</option>`;
+            } else {
+                deptOpts = `<option value="عام (IT)" selected>عام (IT)</option>`;
+            }
+
             const formHtml = `
                 <input id="sn" class="login-input" placeholder="اسم المادة">
                 <select id="s-year" class="login-input" style="background:#000;">
-                    <option value="" disabled selected>اختر الفرقة الدراسية</option>
-                    <option value="الفرقة الأولى">الفرقة الأولى</option>
-                    <option value="الفرقة الثانية">الفرقة الثانية</option>
-                    <option value="الفرقة الثالثة">الفرقة الثالثة</option>
-                    <option value="الفرقة الرابعة">الفرقة الرابعة</option>
+                    ${yearOpts}
                 </select>
-                <select id="s-dept" class="login-input" style="background:#000;"><option value="عام (IT)">عام (IT)</option></select>
+                <select id="s-dept" class="login-input" style="background:#000;">
+                    ${deptOpts}
+                </select>
                 <p style="text-align:right; font-size:12px; color:var(--text-muted);">أيقونة / صورة المادة:</p>
-                <input type="file" id="si" class="login-input">
+                <input type="file" id="si" class="login-input" accept="image/*">
             `;
+
             const { value: v } = await Swal.fire({ 
                 ...swalDark, title: 'إضافة مادة جديدة', html: formHtml,
                 didOpen: () => {
@@ -892,6 +917,78 @@
                 const data = await res.json();
                 if(data.status === 'error') Swal.fire({...swalDark, icon: 'error', text: data.message});
                 else { await refreshData(); Swal.fire({...swalDark, icon: 'success', title: 'تم إضافة المادة!', timer: 1500, showConfirmButton: false}); }
+            }
+        }
+
+        // --- التعديل الجديد: وظيفة تعديل المادة الخاصة بالآدمن ---
+        async function editSubject(subId) {
+            const subject = globalSubjects.find(s => s.id === subId);
+            if (!subject) return;
+
+            let yearOpts = "";
+            ["الفرقة الأولى", "الفرقة الثانية", "الفرقة الثالثة", "الفرقة الرابعة"].forEach(y => {
+                yearOpts += `<option value="${y}" ${subject.year === y ? "selected" : ""}>${y}</option>`;
+            });
+
+            let deptOpts = "";
+            if (subject.year === 'الفرقة الثالثة' || subject.year === 'الفرقة الرابعة') {
+                deptOpts += `<option value="عام (IT)" ${subject.department === 'عام (IT)' ? 'selected' : ''}>عام (IT)</option>`;
+                deptOpts += `<option value="Software" ${subject.department === 'Software' ? 'selected' : ''}>Software</option>`;
+                deptOpts += `<option value="Network" ${subject.department === 'Network' ? 'selected' : ''}>Network</option>`;
+            } else {
+                deptOpts = `<option value="عام (IT)" selected>عام (IT)</option>`;
+            }
+
+            const formHtml = `
+                <input id="esn" class="login-input" placeholder="اسم المادة" value="${subject.name}">
+                <select id="es-year" class="login-input" style="background:#000;">
+                    ${yearOpts}
+                </select>
+                <select id="es-dept" class="login-input" style="background:#000;">
+                    ${deptOpts}
+                </select>
+                <p style="text-align:right; font-size:12px; color:var(--text-muted);">تغيير الصورة (اتركه فارغاً لعدم التغيير):</p>
+                <input type="file" id="esi" class="login-input" accept="image/*">
+            `;
+
+            const { value: v } = await Swal.fire({
+                ...swalDark, title: 'تعديل بيانات المادة', html: formHtml,
+                didOpen: () => {
+                    document.getElementById('es-year').addEventListener('change', (e) => {
+                        const deptSelect = document.getElementById('es-dept');
+                        if (e.target.value === 'الفرقة الثالثة' || e.target.value === 'الفرقة الرابعة') {
+                            deptSelect.innerHTML = '<option value="عام (IT)">عام (IT)</option><option value="Software">Software</option><option value="Network">Network</option>';
+                        } else {
+                            deptSelect.innerHTML = '<option value="عام (IT)">عام (IT)</option>';
+                        }
+                    });
+                },
+                preConfirm: () => {
+                    const n = document.getElementById('esn').value;
+                    const y = document.getElementById('es-year').value;
+                    const d = document.getElementById('es-dept').value;
+                    const f = document.getElementById('esi').files[0];
+                    
+                    if(!n || !y || !d) return Swal.showValidationMessage('يرجى استكمال البيانات الأساسية!');
+                    
+                    if (f) {
+                        return new Promise(r => { 
+                            const rd = new FileReader(); 
+                            rd.onload = (e) => r({ id: subject.id, name: n, year: y, department: d, image: e.target.result }); 
+                            rd.readAsDataURL(f); 
+                        });
+                    } else {
+                        return { id: subject.id, name: n, year: y, department: d };
+                    }
+                }
+            });
+
+            if(v) {
+                Swal.fire({title: 'جاري الحفظ...', background: '#1a1f2c', color: '#fff', didOpen: () => Swal.showLoading()});
+                const res = await fetch('/api/admin-action', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action:'manage_subject', sub:'edit', subject:v}) });
+                const data = await res.json();
+                if(data.status === 'error') Swal.fire({...swalDark, icon: 'error', text: data.message});
+                else { await refreshData(); Swal.fire({...swalDark, icon: 'success', title: 'تم التعديل!', timer: 1500, showConfirmButton: false}); }
             }
         }
 
@@ -1084,7 +1181,6 @@
             }
         }
 
-        // --- نافذة اختيار المعيدين بالاسم فقط ---
         window.filterTAList = function() {
             const q = document.getElementById('search-ta').value.toLowerCase();
             const items = document.querySelectorAll('.ta-item');
