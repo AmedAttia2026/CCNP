@@ -78,6 +78,10 @@
         .swal2-popup { border-radius: 20px !important; background: #1a1f2c !important; color: #fff !important; }
         .swal2-textarea, .swal2-input { background: #0d1117 !important; color: #fff !important; border: 1px solid #4a5568 !important; text-align: right; font-size: 15px !important; font-weight:bold;}
         .swal2-input:focus, .swal2-textarea:focus { border-color: var(--gold) !important; box-shadow: none !important;}
+        
+        /* تنسيق للقوائم داخل الاستيراد */
+        optgroup { color: var(--gold); font-weight: bold; font-style: normal; background: #1F2937; }
+        optgroup option { color: #fff; font-weight: normal; background: #000;}
 
         @media (max-width: 1024px) {
             .sidebar { transform: translateX(100%); box-shadow: -5px 0 25px rgba(0,0,0,0.6); }
@@ -174,7 +178,12 @@
 
             <div id="committees" class="content-section">
                 <div id="committees-title" style="margin-bottom:10px;"></div>
-                <button class="btn btn-gold" style="margin-bottom: 10px;" onclick="addCommittee()"><i class="fas fa-paste"></i> لصق وإنشاء لجنة للطلاب</button>
+                
+                <div style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; background:var(--bg-card); padding:12px; border-radius:12px; border:1px solid var(--border);">
+                    <button class="btn btn-gold" onclick="addCommittee()"><i class="fas fa-paste"></i> لصق وإنشاء لجنة</button>
+                    <button class="btn btn-blue" onclick="copyCommitteesFromOtherSubject()"><i class="fas fa-copy"></i> استيراد لجان من مادة أخرى</button>
+                </div>
+
                 <div class="table-container" style="margin-top:0;">
                     <table>
                         <thead><tr><th>اللجنة / المدرج</th><th>عدد الطلاب</th><th>بواسطة</th><th>إجراء</th></tr></thead>
@@ -299,7 +308,6 @@
             document.getElementById('welcome-text').innerHTML = `مرحباً، ${me.name} ${roleBadge}`;
 
             if(me.role !== 'super_admin') document.querySelectorAll('.super-only').forEach(e => e.style.display = 'none');
-            // إخفاء إدارة الموظفين فقط عن المعيدين (حتى يظهر لهم زر الباسورد الخاص بهم فقط)
             if(me.role === 'ta') document.querySelectorAll('.staff-manager-only').forEach(e => e.style.display = 'none');
 
             if(me.role === 'super_admin' || me.role === 'doctor') {
@@ -351,14 +359,11 @@
             }
         }
 
-        // التعديل هنا: الدالة الخاصة بتغيير كلمة المرور للمستخدم المفتوح حالياً
         async function changeMyPassword() {
             const { value: formValues } = await Swal.fire({
                 ...swalDark,
                 title: 'تغيير كلمة المرور الخاصة بي',
-                html: `
-                    <input id="new-pw" type="text" class="login-input" placeholder="كلمة المرور الجديدة">
-                `,
+                html: `<input id="new-pw" type="text" class="login-input" placeholder="كلمة المرور الجديدة">`,
                 preConfirm: () => {
                     const pw = document.getElementById('new-pw').value;
                     if(!pw || pw.trim() === '') return Swal.showValidationMessage('يجب إدخال كلمة مرور جديدة');
@@ -483,8 +488,10 @@
         function filterCommitteesBySubject(subId, el) {
             committeeFilter.sub = subId;
             saveAllFilters();
+            
             document.querySelectorAll('#menu-committees li').forEach(li => li.classList.remove('active'));
-            el.classList.add('active');
+            if(el && el.tagName === 'LI') el.classList.add('active');
+            
             if(window.innerWidth <= 1024) toggleSidebar();
             renderCommittees();
         }
@@ -609,7 +616,7 @@
             let list = fullComplaints.filter(c => c.status === tabName);
             if(activeSub) list = list.filter(c => c.subject_id === activeSub);
             
-            const totalInSubject = list.length; // Count before committee filter for the wipe button condition
+            const totalInSubject = list.length; 
 
             if(activeCom !== 'all') list = list.filter(c => c.assigned_committee === activeCom || (c.actual_committee && c.actual_committee === activeCom));
 
@@ -838,6 +845,76 @@
                 await fetch('/api/admin-action', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action:'manage_committee', sub:'add', committee:v}) }); 
                 await refreshData(); 
                 Swal.fire({...swalDark, icon: 'success', title: 'تم توزيع اللجنة بنجاح!', timer: 1500, showConfirmButton: false});
+            }
+        }
+
+        // الوظيفة المحدثة: استيراد ذكي للجان (يفصل المواد بناءً على القسم والمواد العامة)
+        async function copyCommitteesFromOtherSubject() {
+            let activeSubId = committeeFilter.sub;
+            let currentSub = globalSubjects.find(s => s.id === activeSubId);
+            
+            if(!currentSub) return Swal.fire({...swalDark, icon:'warning', text:'قم باختيار المادة التي تريد الاستيراد إليها أولاً!'});
+
+            // فلترة ذكية: جلب مواد نفس الفرقة التي تطابق القسم الحالي (أو المواد العامة)
+            let matchingSubs = globalSubjects.filter(s => {
+                if (s.id === currentSub.id) return false; 
+                if (s.year !== currentSub.year) return false; 
+                if (currentSub.department === 'عام (IT)') return true; // العام يسحب من أي حاجة في الدفعة
+                return s.department === currentSub.department || s.department === 'عام (IT)';
+            });
+
+            if(matchingSubs.length === 0) return Swal.fire({...swalDark, icon:'info', text:'لا توجد مواد مطابقة (نفس القسم أو مواد عامة) في هذه الفرقة لنقل اللجان منها.'});
+
+            // تقسيم الـ Dropdown ليكون شكله مرتب ومنطقي
+            let generalOpts = matchingSubs.filter(s => s.department === 'عام (IT)').map(s => `<option value="${s.id}">${s.name} (عام / مشترك)</option>`).join('');
+            let specificOpts = matchingSubs.filter(s => s.department !== 'عام (IT)').map(s => `<option value="${s.id}">${s.name} (${s.department})</option>`).join('');
+
+            let finalOpts = '';
+            if (specificOpts) finalOpts += `<optgroup label="مواد التخصص (${currentSub.department !== 'عام (IT)' ? currentSub.department : 'أخرى'})">${specificOpts}</optgroup>`;
+            if (generalOpts) finalOpts += `<optgroup label="مواد عامة (مشتركة)">${generalOpts}</optgroup>`;
+
+            const { value: sourceSubId } = await Swal.fire({
+                ...swalDark,
+                title: 'استيراد اللجان',
+                html: `
+                    <div style="text-align:right; font-size:13px; color:var(--text-muted); margin-bottom:15px; background:rgba(255,179,0,0.1); padding:10px; border-radius:8px; border:1px solid rgba(255,179,0,0.3);">
+                        سيتم استيراد اللجان إلى المادة المحددة: <br>
+                        <b style="color:var(--gold); font-size:15px;">${currentSub.name}</b> 
+                        <span style="font-size:11px;">(${currentSub.department})</span>
+                    </div>
+                    <select id="source-sub" class="login-input" style="background:#000;">
+                        <option value="" disabled selected>اختر المادة لسحب لجانها...</option>
+                        ${finalOpts}
+                    </select>
+                `,
+                preConfirm: () => {
+                    const val = document.getElementById('source-sub').value;
+                    if(!val) return Swal.showValidationMessage('الرجاء اختيار مادة للاستيراد منها!');
+                    return val;
+                }
+            });
+
+            if(sourceSubId) {
+                let sourceCommittees = globalCommittees.filter(c => c.subject_id === sourceSubId);
+                if(sourceCommittees.length === 0) return Swal.fire({...swalDark, icon:'warning', text:'المادة المختارة لا تحتوي على أي لجان حالياً لاستيرادها!'});
+
+                Swal.fire({title: 'جاري النسخ والاستيراد...', background: '#1a1f2c', color: '#fff', didOpen: () => Swal.showLoading()});
+
+                for(let com of sourceCommittees) {
+                    let newComData = {
+                        subject_id: currentSub.id,
+                        name: com.committee_name,
+                        raw_ids: com.ids.join('\n') 
+                    };
+                    await fetch('/api/admin-action', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({action: 'manage_committee', sub: 'add', committee: newComData})
+                    });
+                }
+                
+                await refreshData();
+                Swal.fire({...swalDark, icon: 'success', title: 'تم استيراد اللجان بنجاح!', timer: 1500, showConfirmButton: false});
             }
         }
 
