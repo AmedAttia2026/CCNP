@@ -87,7 +87,6 @@ def student_action():
         students_col.update_one({"student_id": s_id}, {"$set": {"password": new_p}})
         return jsonify({"status": "success"})
     
-    # [التأمين الجديد]: التحقق من الباسورد لأي عملية أخرى للطالب
     pwd = str(data.get('password', '')).strip()
     if not students_col.find_one({"student_id": s_id, "password": pwd}):
         return jsonify({"status": "error", "message": "انتهت الجلسة أو تم تغيير بياناتك. يرجى تسجيل الدخول مجدداً."}), 401
@@ -129,7 +128,6 @@ def check_id():
     subject_id = data.get('subject_id')
     student_id = str(data.get('student_id')).strip()
     
-    # [التأمين الجديد]: التأكد من الباسورد قبل السماح للطالب بمعرفة لجنته
     pwd = str(data.get('password', '')).strip()
     if not students_col.find_one({"student_id": student_id, "password": pwd}):
         return jsonify({"status": "error", "message": "انتهت الجلسة أو تم تغيير بياناتك. يرجى تسجيل الدخول مجدداً."}), 401
@@ -148,7 +146,6 @@ def submit_complaint():
     if not check_system_open(): return jsonify({"status": "error", "message": "النظام مغلق حالياً."}), 403
     data = request.json
     
-    # [التأمين الجديد]: التحقق من الباسورد قبل تسجيل الشكوى
     student_id = data.get('student_id')
     pwd = str(data.get('password', '')).strip()
     if not students_col.find_one({"student_id": student_id, "password": pwd}):
@@ -164,7 +161,7 @@ def submit_complaint():
         "tracking_id": tracking_id,
         "subject_id": data['subject_id'],
         "subject_name": data['subject_name'],
-        "student_id": student_id,
+        "student_id": data['student_id'],
         "student_name": data['student_name'],
         "assigned_committee": data['assigned_committee'],
         "actual_committee": data['actual_committee'],
@@ -179,7 +176,8 @@ def login():
     if request.method == 'POST':
         user = users_col.find_one({"username": request.json.get('username'), "password": request.json.get('password')})
         if user:
-            session['admin'] = {"username": user['username'], "role": user['role'], "name": user['name']}
+            # [تأمين]: حفظ الباسورد في الجلسة لمطابقته لاحقاً
+            session['admin'] = {"username": user['username'], "role": user['role'], "name": user['name'], "password": user['password']}
             return jsonify({"status": "success"})
         return jsonify({"status": "error", "message": "بيانات الدخول غير صحيحة"}), 401
     return render_template('admin.html')
@@ -194,6 +192,12 @@ def get_admin_data():
     if 'admin' not in session: return jsonify({"status": "unauthorized"}), 401
     
     curr_user = users_col.find_one({"username": session['admin']['username']})
+    
+    # [نظام الطرد الذكي]: إذا تم حذف المستخدم أو تغير الباسورد، يتم طرده فوراً
+    if not curr_user or curr_user.get('password') != session['admin'].get('password'):
+        session.clear()
+        return jsonify({"status": "unauthorized", "message": "تم تغيير بيانات حسابك أو تم حذفه. يرجى تسجيل الدخول مجدداً."}), 401
+        
     user_role = curr_user.get('role')
     
     if user_role == 'super_admin':
@@ -230,12 +234,18 @@ def get_admin_data():
 
 @app.route('/api/admin-action', methods=['POST'])
 def admin_action():
-    if 'admin' not in session: return jsonify({"status": "unauthorized"}), 403
+    if 'admin' not in session: return jsonify({"status": "unauthorized", "message": "انتهت الجلسة"}), 401
     
+    curr_db = users_col.find_one({"username": session['admin']['username']})
+    
+    # [نظام الطرد الذكي]: تأمين جميع العمليات (حذف/تعديل/إضافة)
+    if not curr_db or curr_db.get('password') != session['admin'].get('password'):
+        session.clear()
+        return jsonify({"status": "unauthorized", "message": "تم تغيير بيانات حسابك أو تم حذفه. يرجى تسجيل الدخول مجدداً."}), 401
+        
     data = request.json
     action = data.get('action')
     curr = session['admin']
-    curr_db = users_col.find_one({"username": curr['username']})
     role = curr_db.get('role')
     
     if action == 'toggle_system' and role == 'super_admin':
@@ -255,7 +265,11 @@ def admin_action():
         return jsonify({"status": "success"})
 
     elif action == 'change_my_password':
-        users_col.update_one({"username": curr['username']}, {"$set": {"password": data['new_password']}})
+        new_pw = data['new_password']
+        users_col.update_one({"username": curr['username']}, {"$set": {"password": new_pw}})
+        # تحديث الجلسة فوراً حتى لا يتم طرد المستخدم الذي قام بتغيير باسوورده بنفسه
+        session['admin']['password'] = new_pw
+        session.modified = True
         return jsonify({"status": "success"})
 
     elif action == 'change_password':
