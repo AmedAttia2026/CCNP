@@ -18,16 +18,15 @@ committees_col = db['committees']
 complaints_col = db['complaints']
 settings_col = db['settings']
 
-# [الحل الجذري]: تحديث إجباري لحساب الآدمن الرئيسي لضمان مسح الباسورد القديم
-users_col.update_one(
-    {"role": "super_admin"},
-    {"$set": {
-        "username": "|ًٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌُ Nًًًًٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌُُُُexusًٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌٌُ ًًًٌٌٌُُُ|ًًًًًًًًًًًًًًًًًً|ًًًََََُُُُ 2ًًًًًًًًًًًًًًًًًًًًًًًًًًًٌٌٌُُُ026ًًًًًًًًًًًًًًًًًًًًًًًًًًًًً|!@#$@#$", 
-        "password": "Nexus@Aًًٌٌُُhmًًٌٌُُed@Aًًٌٌُُdmًًٌٌٌُُin202ًًًٌٌٌُُُ6!#|\ًًٌٌُُ!#OIًًٌٌُ", 
-        "name": "Nexus"
-    }},
-    upsert=True
-)
+# [التعديل الجديد]: إنشاء حساب الآدمن الرئيسي فقط إذا لم يكن موجوداً
+# هذا يمنع إعادة تعيين الباسورد في كل مرة يعمل فيها السيرفر
+if not users_col.find_one({"role": "super_admin"}):
+    users_col.insert_one({
+        "role": "super_admin",
+        "username": "Nexus", 
+        "password": "Nexus2026@batu", 
+        "name": "الآدمن الرئيسي"
+    })
 
 if not settings_col.find_one({"type": "system_status"}):
     settings_col.insert_one({"type": "system_status", "is_open": True})
@@ -208,7 +207,6 @@ def admin_action():
             })
         elif data['sub'] == 'delete': committees_col.delete_one({"committee_id": data['id']})
 
-    # ------------------ الأوامر الجديدة لمسح اللجان والشكاوى للمادة ------------------
     elif action == 'wipe_subject_committees':
         if role != 'super_admin': 
             return jsonify({"status": "error", "message": "غير مصرح لك بمسح اللجان!"}), 403
@@ -220,7 +218,6 @@ def admin_action():
             return jsonify({"status": "error", "message": "غير مصرح لك بمسح الشكاوى!"}), 403
         complaints_col.delete_many({"subject_id": data['subject_id'], "status": data['status']})
         return jsonify({"status": "success"})
-    # ----------------------------------------------------------------------------------
 
     elif action == 'manage_staff':
         if role == 'ta': return jsonify({"status": "error", "message": "المعيد ليس له صلاحية إدارة طاقم"}), 403
