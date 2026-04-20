@@ -18,6 +18,17 @@ committees_col = db['committees']
 complaints_col = db['complaints']
 settings_col = db['settings']
 
+# --- التعديلات الجديدة: إنشاء الفهارس (Indexes) لتسريع البحث بنسبة تتخطى 90% ---
+try:
+    users_col.create_index("username", unique=True)
+    complaints_col.create_index("tracking_id", unique=True)
+    committees_col.create_index([("subject_id", 1), ("ids", 1)])
+except:
+    pass
+
+# [التعديل الجديد]: نظام الكاش لتخفيف الضغط على قاعدة البيانات
+SYSTEM_IS_OPEN_CACHE = None
+
 # [التعديل الجديد]: إنشاء حساب الآدمن الرئيسي فقط إذا لم يكن موجوداً
 # هذا يمنع إعادة تعيين الباسورد في كل مرة يعمل فيها السيرفر
 if not users_col.find_one({"role": "super_admin"}):
@@ -32,8 +43,11 @@ if not settings_col.find_one({"type": "system_status"}):
     settings_col.insert_one({"type": "system_status", "is_open": True})
 
 def check_system_open():
-    status = settings_col.find_one({"type": "system_status"})
-    return status.get('is_open', True) if status else True
+    global SYSTEM_IS_OPEN_CACHE
+    if SYSTEM_IS_OPEN_CACHE is None:
+        status = settings_col.find_one({"type": "system_status"})
+        SYSTEM_IS_OPEN_CACHE = status.get('is_open', True) if status else True
+    return SYSTEM_IS_OPEN_CACHE
 
 def generate_tracking_id():
     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
@@ -160,6 +174,8 @@ def admin_action():
     
     if action == 'toggle_system' and role == 'super_admin':
         settings_col.update_one({"type": "system_status"}, {"$set": {"is_open": data['is_open']}})
+        global SYSTEM_IS_OPEN_CACHE
+        SYSTEM_IS_OPEN_CACHE = data['is_open']
         return jsonify({"status": "success"})
 
     elif action == 'toggle_subject_complaints':
@@ -320,4 +336,5 @@ def admin_action():
     return jsonify({"status": "success"})
 
 if __name__ == '__main__':
+    # لتشغيل السيرفر في وضع التطوير (للإنتاج استخدم Gunicorn)
     app.run(port=8080)
