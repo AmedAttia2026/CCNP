@@ -4,7 +4,8 @@ import re
 import random
 import string
 
-app = Flask(__name__, template_folder='../templates')
+# إعداد مسارات الـ templates والـ static بشكل صحيح
+app = Flask(__name__, template_folder='../templates', static_folder='../static', static_url_path='/static')
 app.secret_key = "DR_SELEM_VIP_SECURE_2026"
 
 # اتصال قاعدة البيانات
@@ -93,6 +94,10 @@ def student_action():
         
     if action == 'get_complaints':
         my_complaints = list(complaints_col.find({"student_id": s_id}, {"_id": 0}))
+        for c in my_complaints:
+            sub = subjects_col.find_one({"id": c.get('subject_id')})
+            c['is_open'] = sub.get('complaints_open', True) if sub else True
+            
         my_complaints.reverse()
         return jsonify({"status": "success", "complaints": my_complaints})
         
@@ -100,7 +105,12 @@ def student_action():
         tracking_id = data.get('tracking_id')
         new_prob = data.get('new_problem')
         comp = complaints_col.find_one({"tracking_id": tracking_id, "student_id": s_id})
+        
         if comp and comp.get('status') == 'pending':
+            sub = subjects_col.find_one({"id": comp.get('subject_id')})
+            if sub and not sub.get('complaints_open', True):
+                return jsonify({"status": "error", "message": "عفواً، تم إغلاق باب الشكاوى والتعديل لهذه المادة."}), 403
+                
             complaints_col.update_one({"tracking_id": tracking_id}, {"$set": {"problem": new_prob[:150]}})
             return jsonify({"status": "success"})
         return jsonify({"status": "error", "message": "لا يمكن تعديل هذه الشكوى الآن."}), 400
@@ -108,7 +118,12 @@ def student_action():
     elif action == 'delete_complaint':
         tracking_id = data.get('tracking_id')
         comp = complaints_col.find_one({"tracking_id": tracking_id, "student_id": s_id})
+        
         if comp and comp.get('status') == 'pending':
+            sub = subjects_col.find_one({"id": comp.get('subject_id')})
+            if sub and not sub.get('complaints_open', True):
+                return jsonify({"status": "error", "message": "عفواً، تم إغلاق باب الشكاوى ولا يمكن الحذف الآن."}), 403
+                
             complaints_col.delete_one({"tracking_id": tracking_id})
             return jsonify({"status": "success"})
         return jsonify({"status": "error", "message": "لا يمكن حذف هذه الشكوى."}), 400
@@ -137,7 +152,14 @@ def check_id():
         
     committee = committees_col.find_one({"subject_id": subject_id, "ids": student_id})
     if committee:
-        return jsonify({"status": "success", "committee_name": committee['committee_name']})
+        # البحث عن شكوى سابقة للطالب في هذه المادة لعرضها مباشرة
+        existing_comp = complaints_col.find_one({"subject_id": subject_id, "student_id": student_id}, {"_id": 0})
+        
+        return jsonify({
+            "status": "success", 
+            "committee_name": committee['committee_name'],
+            "existing_complaint": existing_comp
+        })
     else:
         return jsonify({"status": "error", "message": "لم يتم العثور على هذا الـ ID في هذه المادة. تأكد من الرقم."})
 
@@ -151,17 +173,30 @@ def submit_complaint():
     if not students_col.find_one({"student_id": student_id, "password": pwd}):
         return jsonify({"status": "error", "message": "انتهت الجلسة أو تم تغيير بياناتك. يرجى تسجيل الدخول مجدداً."}), 401
     
-    subject = subjects_col.find_one({"id": data['subject_id']})
+    subject_id = data.get('subject_id')
+    subject = subjects_col.find_one({"id": subject_id})
     if subject and not subject.get('complaints_open', True):
         return jsonify({"status": "error", "message": "عفواً، تم إغلاق باب استقبال الشكاوى لهذه المادة من قبل دكتور المادة."}), 403
+
+    # حماية السيرفر من تكرار الشكاوى لنفس المادة
+    existing_complaint = complaints_col.find_one({
+        "student_id": student_id,
+        "subject_id": subject_id
+    })
+    
+    if existing_complaint:
+        return jsonify({
+            "status": "error", 
+            "message": "لقد قمت بتقديم شكوى في هذه المادة مسبقاً! يرجى مراجعة (سجل شكاوي) لمتابعة الرد أو تعديل الشكوى."
+        }), 400
 
     tracking_id = generate_tracking_id()
     
     complaints_col.insert_one({
         "tracking_id": tracking_id,
-        "subject_id": data['subject_id'],
+        "subject_id": subject_id,
         "subject_name": data['subject_name'],
-        "student_id": data['student_id'],
+        "student_id": student_id,
         "student_name": data['student_name'],
         "assigned_committee": data['assigned_committee'],
         "actual_committee": data['actual_committee'],
@@ -176,7 +211,6 @@ def login():
     if request.method == 'POST':
         user = users_col.find_one({"username": request.json.get('username'), "password": request.json.get('password')})
         if user:
-            # [تأمين]: حفظ الباسورد في الجلسة لمطابقته لاحقاً
             session['admin'] = {"username": user['username'], "role": user['role'], "name": user['name'], "password": user['password']}
             return jsonify({"status": "success"})
         return jsonify({"status": "error", "message": "بيانات الدخول غير صحيحة"}), 401
@@ -193,7 +227,6 @@ def get_admin_data():
     
     curr_user = users_col.find_one({"username": session['admin']['username']})
     
-    # [نظام الطرد الذكي]: إذا تم حذف المستخدم أو تغير الباسورد، يتم طرده فوراً
     if not curr_user or curr_user.get('password') != session['admin'].get('password'):
         session.clear()
         return jsonify({"status": "unauthorized", "message": "تم تغيير بيانات حسابك أو تم حذفه. يرجى تسجيل الدخول مجدداً."}), 401
@@ -238,7 +271,6 @@ def admin_action():
     
     curr_db = users_col.find_one({"username": session['admin']['username']})
     
-    # [نظام الطرد الذكي]: تأمين جميع العمليات (حذف/تعديل/إضافة)
     if not curr_db or curr_db.get('password') != session['admin'].get('password'):
         session.clear()
         return jsonify({"status": "unauthorized", "message": "تم تغيير بيانات حسابك أو تم حذفه. يرجى تسجيل الدخول مجدداً."}), 401
@@ -267,7 +299,6 @@ def admin_action():
     elif action == 'change_my_password':
         new_pw = data['new_password']
         users_col.update_one({"username": curr['username']}, {"$set": {"password": new_pw}})
-        # تحديث الجلسة فوراً حتى لا يتم طرد المستخدم الذي قام بتغيير باسوورده بنفسه
         session['admin']['password'] = new_pw
         session.modified = True
         return jsonify({"status": "success"})
