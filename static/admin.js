@@ -1,6 +1,3 @@
-// ==========================================
-// Shared Settings & Variables (Admin)
-// ==========================================
 const swalDark = { background: '#1F2937', color: '#fff', confirmButtonColor: '#FFB300' };
 
 let me = null;
@@ -22,16 +19,27 @@ let compFilters = JSON.parse(localStorage.getItem('admin_comp_filters')) || {
     'spam': { sub: '', com: 'all' }
 };
 
-// ==========================================
-// Window Onload Dispatcher (Admin)
-// ==========================================
 window.onload = async () => {
     refreshData();
 };
 
-// ==========================================
-// Admin Functions
-// ==========================================
+function toggleAdminPasswordVisibility() {
+    const passInput = document.getElementById('pass');
+    const icon = document.getElementById('toggle-admin-pass-icon');
+    
+    if (passInput.type === 'password') {
+        passInput.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+        icon.style.color = 'var(--gold)';
+    } else {
+        passInput.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+        icon.style.color = 'var(--text-muted)';
+    }
+}
+
 async function changeMyPassword() {
     const { value: formValues } = await Swal.fire({
         ...swalDark,
@@ -89,20 +97,26 @@ async function handleLogin() {
     }
     Swal.fire({title: 'جاري التحقق...', background: '#1a1f2c', color: '#fff', didOpen: () => Swal.showLoading()});
     
-    const res = await fetch('/auth-gateway-vip-x9v2-pL7q-2026', { 
-        method: 'POST', 
-        headers: {'Content-Type': 'application/json'}, 
-        body: JSON.stringify({username: userVal, password: passVal})
-    });
-    const data = await res.json();
-    
-    if(data.status === 'success') {
-        Swal.close();
-        document.getElementById('user').value = '';
-        document.getElementById('pass').value = '';
-        refreshData(); 
-    } else {
-        Swal.fire({...swalDark, icon: 'error', text: data.message});
+    try {
+        const res = await fetch('/secure-auth-gateway-2026-x9v2-pl7q-a84m', { 
+            method: 'POST', 
+            headers: {'Content-Type': 'application/json'}, 
+            body: JSON.stringify({username: userVal, password: passVal})
+        });
+        const data = await res.json();
+        
+        if(data.status === 'success') {
+            Swal.close();
+            document.getElementById('user').value = '';
+            document.getElementById('pass').value = '';
+            refreshData(); 
+        } else {
+            document.getElementById('pass').value = ''; // تفريغ حقل الباسورد عند الخطأ
+            Swal.fire({...swalDark, icon: 'error', text: data.message});
+        }
+    } catch(e) {
+        document.getElementById('pass').value = ''; // تفريغ الحقل
+        Swal.fire({...swalDark, icon: 'error', text: 'حدث خطأ في الاتصال أو تم حظرك مؤقتاً بسبب كثرة المحاولات.'});
     }
 }
 
