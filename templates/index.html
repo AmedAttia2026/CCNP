@@ -22,7 +22,10 @@
                 <span>@batechu.com</span>
             </div>
             
-            <input type="password" id="login-pass" class="auth-input ltr-input" placeholder="Password">
+            <div style="position: relative; margin-bottom: 15px;">
+                <input type="password" id="login-pass" class="auth-input ltr-input" placeholder="Password" style="margin-bottom: 0; padding-right: 40px;">
+                <i class="fas fa-eye" id="toggle-pass-icon" onclick="togglePasswordVisibility()" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: var(--text-muted); cursor: pointer; font-size: 16px; transition: 0.3s;"></i>
+            </div>
 
             <button class="btn-primary" style="width:100%; margin-top: 5px;" onclick="loginStudent()">تسجيل الدخول <i class="fas fa-sign-in-alt"></i></button>
         </div>
