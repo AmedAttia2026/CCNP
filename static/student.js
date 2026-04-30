@@ -1,14 +1,8 @@
-// ==========================================
-// Shared Settings & Variables (Student)
-// ==========================================
 const swalDark = { background: '#1F2937', color: '#fff', confirmButtonColor: '#FFB300' };
 
 let currentSubId, currentSubName, currentAssignedCom;
 let studentComplaintsData = []; 
 
-// ==========================================
-// Window Onload Dispatcher (Student)
-// ==========================================
 window.onload = async () => {
     const savedID = localStorage.getItem('drselem_student_id');
     const savedPass = localStorage.getItem('drselem_student_pass');
@@ -43,9 +37,23 @@ window.onload = async () => {
     }
 };
 
-// ==========================================
-// Student Functions
-// ==========================================
+function togglePasswordVisibility() {
+    const passInput = document.getElementById('login-pass');
+    const icon = document.getElementById('toggle-pass-icon');
+    
+    if (passInput.type === 'password') {
+        passInput.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+        icon.style.color = 'var(--gold)';
+    } else {
+        passInput.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+        icon.style.color = 'var(--text-muted)';
+    }
+}
+
 async function changeMyPassword() {
     const { value: formValues } = await Swal.fire({
         ...swalDark,
@@ -90,18 +98,40 @@ async function changeMyPassword() {
 }
 
 async function loginStudent() {
-    let stIdInput = document.getElementById('login-id').value.trim(); const stPass = document.getElementById('login-pass').value.trim(); const stId = stIdInput.replace(/[^0-9]/g, '');
+    let stIdInput = document.getElementById('login-id').value.trim(); 
+    const stPass = document.getElementById('login-pass').value.trim(); 
+    const stId = stIdInput.replace(/[^0-9]/g, '');
+    
     if (stId.length !== 7) return Swal.fire({icon: 'error', text: 'رقم الـ ID يجب أن يكون 7 أرقام!', background:'#1a1f2c', color:'#fff'});
     if (!stPass) return Swal.fire({icon: 'warning', text: 'يرجى إدخال كلمة المرور!', background:'#1a1f2c', color:'#fff'});
+    
     Swal.fire({title: 'جاري التحقق...', background:'#1a1f2c', color:'#fff', didOpen: () => Swal.showLoading()});
+    
     try {
         const res = await fetch('/api/student-login', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({student_id: stId, password: stPass}) });
         const data = await res.json();
+        
         if (data.status === 'success') {
-            const s = data.student; localStorage.setItem('drselem_student_id', s.student_id); localStorage.setItem('drselem_student_name', s.name); localStorage.setItem('drselem_student_year', s.year); localStorage.setItem('drselem_student_dept', s.department); localStorage.setItem('drselem_student_email', s.email); localStorage.setItem('drselem_student_pass', stPass);
-            Swal.close(); document.getElementById('auth-screen').style.display = 'none'; document.getElementById('main-ui').style.display = 'flex'; initDashboard();
-        } else Swal.fire({icon: 'error', text: data.message, background:'#1a1f2c', color:'#fff'});
-    } catch(e) { Swal.fire({icon: 'error', text: 'حدث خطأ في الاتصال بخوادم الجامعة.', background:'#1a1f2c', color:'#fff'}); }
+            const s = data.student; 
+            localStorage.setItem('drselem_student_id', s.student_id); 
+            localStorage.setItem('drselem_student_name', s.name); 
+            localStorage.setItem('drselem_student_year', s.year); 
+            localStorage.setItem('drselem_student_dept', s.department); 
+            localStorage.setItem('drselem_student_email', s.email); 
+            localStorage.setItem('drselem_student_pass', stPass);
+            
+            Swal.close(); 
+            document.getElementById('auth-screen').style.display = 'none'; 
+            document.getElementById('main-ui').style.display = 'flex'; 
+            initDashboard();
+        } else {
+            document.getElementById('login-pass').value = '';
+            Swal.fire({icon: 'error', text: data.message, background:'#1a1f2c', color:'#fff'});
+        }
+    } catch(e) { 
+        document.getElementById('login-pass').value = '';
+        Swal.fire({icon: 'error', text: 'حدث خطأ في الاتصال أو تم حظرك مؤقتاً بسبب كثرة المحاولات.', background:'#1a1f2c', color:'#fff'}); 
+    }
 }
 
 function logoutStudent() {
@@ -359,9 +389,7 @@ async function editMyComplaint(trackingId) {
             const data = await res.json();
             if (data.status === 'success') { 
                 Swal.fire({icon: 'success', title: 'تم التحديث بنجاح!', background: '#1a1f2c', color: '#fff', timer: 1500, showConfirmButton: false}).then(() => {
-                    // إغلاق أي نوافذ مفتوحة لو كنا بنعدل من شاشة المادة الذكية
                     Swal.close(); 
-                    // لو نافذة السجل مفتوحة يتم تحديثها
                     if(document.getElementById('complaints-screen').style.display === 'flex') openMyComplaints();
                 }); 
             } 
