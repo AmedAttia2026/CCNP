@@ -104,7 +104,7 @@ async function handleLogin() {
         const data = await res.json();
         
         if(data.status === 'success') {
-            sessionStorage.removeItem('has_recorded_audio'); // تصفير العداد عند الدخول بنجاح
+            sessionStorage.removeItem('has_recorded_audio');
             Swal.close();
             document.getElementById('user').value = '';
             document.getElementById('pass').value = '';
@@ -709,27 +709,25 @@ async function replyComplaint(tracking_id, student_name, existing_reply = '', ex
 
                 <hr style="border: 0; border-top: 1px dashed var(--border); margin: 15px 0;">
 
-                <label style="color:var(--gold); font-size:13px; display:block; margin-bottom:10px;"><i class="fas fa-microphone-alt"></i> أو تسجيل صوتي مباشر الآن (الحد الأقصى 3 دقائق):</label>
+                <label style="color:var(--gold); font-size:13px; display:block; margin-bottom:10px;"><i class="fas fa-microphone-alt"></i> أو تسجيل صوتي مباشر الآن:</label>
                 
                 <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-                    <button type="button" id="start-record-btn" class="btn btn-blue" style="padding: 8px 15px; font-size: 13px; border-radius: 8px; transition: all 0.3s;">
+                    <button type="button" id="start-record-btn" class="btn btn-blue" style="padding: 8px 15px; font-size: 13px; border-radius: 8px;">
                         <i class="fas fa-microphone"></i> بدء التسجيل
                     </button>
                     
-                    <button type="button" id="stop-record-btn" class="btn btn-red" style="padding: 8px 15px; font-size: 13px; border-radius: 8px; display: none; transition: all 0.3s;">
-                        <i class="fas fa-stop-circle"></i> إيقاف التسجيل
+                    <button type="button" id="stop-record-btn" class="btn btn-red" style="padding: 8px 15px; font-size: 13px; border-radius: 8px; display: none;">
+                        <i class="fas fa-stop-circle"></i> إيقاف
                     </button>
                     
-                    <span id="record-timer" style="color: #EF4444; font-family: monospace; font-size: 16px; font-weight: bold; display: none; background: rgba(239, 68, 68, 0.1); padding: 4px 10px; border-radius: 6px;">
-                        <i class="fas fa-circle anim-pulse-dot"></i> 00:00 <span style="font-size:10px; color:#9CA3AF;">/ 03:00</span>
-                    </span>
+                    <span id="record-timer" style="color: #EF4444; font-family: monospace; font-size: 16px; font-weight: bold; display: none; background: rgba(239, 68, 68, 0.1); padding: 4px 10px; border-radius: 6px;"><i class="fas fa-circle" style="font-size: 10px; animation: blink 1s infinite;"></i> 00:00</span>
                 </div>
 
                 <div id="audio-preview-container" style="margin-top: 15px; display: none; background: #1F2937; padding: 10px; border-radius: 8px; border: 1px solid #374151;">
-                    <p style="color:#10B981; font-size:12px; margin-bottom:8px;"><i class="fas fa-check-circle"></i> تم التقاط المقطع بنجاح:</p>
-                    <audio id="audio-preview" controls style="width: 100%; height: 35px; border-radius: 6px;"></audio>
+                    <p style="color:#10B981; font-size:12px; margin-bottom:8px;"><i class="fas fa-check-circle"></i> تم تسجيل المقطع بنجاح:</p>
+                    <audio id="audio-preview" controls style="width: 100%; height: 35px;"></audio>
                     <button type="button" id="clear-record-btn" style="background: none; border: none; color: #EF4444; font-size: 12px; margin-top: 10px; cursor: pointer; text-decoration: underline;">
-                        <i class="fas fa-trash"></i> مسح التسجيل وإعادة المحاولة
+                        <i class="fas fa-trash"></i> حذف التسجيل وإعادة المحاولة
                     </button>
                 </div>
             `;
@@ -745,10 +743,7 @@ async function replyComplaint(tracking_id, student_name, existing_reply = '', ex
                 </div>
                 ` : ''}
                 <style>
-                    .anim-pulse-dot { font-size: 10px; animation: blinker 1s linear infinite; }
-                    @keyframes blinker { 50% { opacity: 0; } }
-                    .recording-active-btn { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); animation: pulse-red 1.5s infinite; }
-                    @keyframes pulse-red { 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
+                    @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0; } 100% { opacity: 1; } }
                 </style>
             </div>
         `;
@@ -823,34 +818,23 @@ async function replyComplaint(tracking_id, student_name, existing_reply = '', ex
                             reader.readAsDataURL(audioBlob);
                             reader.onloadend = () => { recordedAudioBase64 = reader.result; };
 
-                            // التنظيف الصارم للمايكروفون
-                            if(mediaStream) {
-                                mediaStream.getTracks().forEach(track => track.stop());
-                                mediaStream = null;
-                            }
+                            mediaStream.getTracks().forEach(track => track.stop());
                         };
 
                         mediaRecorder.start();
                         fileInput.disabled = true; 
                         startBtn.style.display = 'none';
                         stopBtn.style.display = 'inline-block';
-                        stopBtn.classList.add('recording-active-btn'); // تفعيل الأنيميشن
                         timerDisplay.style.display = 'inline-block';
                         
                         recordingSeconds = 0;
-                        timerDisplay.innerHTML = `<i class="fas fa-circle anim-pulse-dot"></i> 00:00 <span style="font-size:10px; color:#9CA3AF;">/ 03:00</span>`;
+                        timerDisplay.innerHTML = `<i class="fas fa-circle" style="font-size: 10px; animation: blink 1s infinite;"></i> 00:00`;
                         
                         recordInterval = setInterval(() => {
                             recordingSeconds++;
                             const mins = String(Math.floor(recordingSeconds / 60)).padStart(2, '0');
                             const secs = String(recordingSeconds % 60).padStart(2, '0');
-                            timerDisplay.innerHTML = `<i class="fas fa-circle anim-pulse-dot"></i> ${mins}:${secs} <span style="font-size:10px; color:#9CA3AF;">/ 03:00</span>`;
-                            
-                            // إيقاف إجباري بعد 3 دقائق للحماية
-                            if (recordingSeconds >= 180) {
-                                stopBtn.click();
-                                Swal.showValidationMessage('تم الوصول للحد الأقصى للتسجيل (3 دقائق) وتم حفظ المقطع.');
-                            }
+                            timerDisplay.innerHTML = `<i class="fas fa-circle" style="font-size: 10px; animation: blink 1s infinite;"></i> ${mins}:${secs}`;
                         }, 1000);
 
                     } catch (err) {
@@ -863,7 +847,6 @@ async function replyComplaint(tracking_id, student_name, existing_reply = '', ex
                         mediaRecorder.stop();
                         clearInterval(recordInterval);
                         stopBtn.style.display = 'none';
-                        stopBtn.classList.remove('recording-active-btn');
                         timerDisplay.style.display = 'none';
                     }
                 };
@@ -878,11 +861,7 @@ async function replyComplaint(tracking_id, student_name, existing_reply = '', ex
             }
         },
         willClose: () => {
-            // إغلاق الميكروفون والعداد في حالة إغلاق النافذة من الـ X أو الإلغاء
-            if (mediaStream) {
-                mediaStream.getTracks().forEach(track => track.stop());
-                mediaStream = null;
-            }
+            if (mediaStream) mediaStream.getTracks().forEach(track => track.stop());
             if (recordInterval) clearInterval(recordInterval);
         },
         preConfirm: () => {
@@ -982,7 +961,7 @@ async function editSubject(subId) {
     const { value: v } = await Swal.fire({
         ...swalDark, title: 'تعديل بيانات المادة', html: formHtml,
         didOpen: () => { document.getElementById('es-year').addEventListener('change', (e) => { const deptSelect = document.getElementById('es-dept'); if (e.target.value === 'الفرقة الثالثة' || e.target.value === 'الفرقة الرابعة') deptSelect.innerHTML = '<option value="عام (IT)">عام (IT)</option><option value="Software">Software</option><option value="Network">Network</option>'; else deptSelect.innerHTML = '<option value="عام (IT)">عام (IT)</option>'; }); },
-        preConfirm: () => { const n = document.getElementById('esn').value, y = document.getElementById('es-year').value, d = document.getElementById('es-dept').value, f = document.getElementById('esi').files[0]; if(!n) return Swal.showValidationMessage('يرجى استكمال البيانات الأساسية!'); if (f) return new Promise(r => { const rd = new FileReader(); rd.onload = (e) => r({ id: subject.id, name: n, year: y, department: d, image: e.target.result }); rd.readAsDataURL(f); }); else return { id: subject.id, name: n, year: y, department: d }; }
+        preConfirm: () => { const n = document.getElementById('esn').value, y = document.getElementById('es-year').value, d = document.getElementById('es-dept').value, f = document.getElementById('esi').files[0]; if(!n || !y) return Swal.showValidationMessage('يرجى استكمال البيانات الأساسية!'); if (f) return new Promise(r => { const rd = new FileReader(); rd.onload = (e) => r({ id: subject.id, name: n, year: y, department: d, image: e.target.result }); rd.readAsDataURL(f); }); else return { id: subject.id, name: n, year: y, department: d }; }
     });
 
     if(v) {
