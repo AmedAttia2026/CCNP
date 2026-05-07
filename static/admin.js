@@ -111,11 +111,11 @@ async function handleLogin() {
             document.getElementById('pass').value = '';
             refreshData(); 
         } else {
-            document.getElementById('pass').value = ''; // تفريغ حقل الباسورد عند الخطأ
+            document.getElementById('pass').value = ''; 
             Swal.fire({...swalDark, icon: 'error', text: data.message});
         }
     } catch(e) {
-        document.getElementById('pass').value = ''; // تفريغ الحقل
+        document.getElementById('pass').value = ''; 
         Swal.fire({...swalDark, icon: 'error', text: 'حدث خطأ في الاتصال أو تم حظرك مؤقتاً بسبب كثرة المحاولات.'});
     }
 }
@@ -674,16 +674,226 @@ async function updateStaffSubjects(targetUsername, newSubjectsList) {
     } catch(e) {}
 }
 
-async function replyComplaint(tracking_id, student_name, existing_reply = '') {
-    const { value: replyText } = await Swal.fire({ title: `رد على شكوى (${student_name})`, inputValue: existing_reply, input: 'textarea', inputPlaceholder: 'اكتب رسالتك للطالب هنا...', confirmButtonText: 'إرسال الرد <i class="fas fa-paper-plane"></i>', showCancelButton: true, cancelButtonText: 'إلغاء', confirmButtonColor: '#10B981', background: '#1a1f2c', color: '#fff', inputValidator: (val) => { if (!val.trim()) return 'يجب كتابة رد!'; } });
-    if(replyText) {
+async function replyComplaint(tracking_id, student_name, existing_reply = '', existing_audio = '') {
+    let mediaRecorder;
+    let audioChunks = [];
+    let recordInterval;
+    let recordedAudioBase64 = null;
+    let recordingSeconds = 0;
+    let mediaStream = null;
+    let removeExistingAudio = false;
+
+    const htmlForm = `
+        <textarea id="reply-text" class="swal2-textarea" placeholder="اكتب رسالتك للطالب هنا..." style="margin: 0; width: 100%; box-sizing: border-box;">${existing_reply}</textarea>
+        
+        <div style="margin-top: 15px; text-align: right; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px; border: 1px solid var(--border);">
+            
+            <label style="color:var(--text-muted); font-size:13px; display:block; margin-bottom:8px;"><i class="fas fa-file-upload"></i> إرفاق ملف صوتي (اختياري):</label>
+            
+            <div style="display:flex; gap:10px; align-items:center; margin-bottom: 15px;">
+                <input type="file" id="reply-audio" accept="audio/*" class="login-input" style="padding: 10px; margin: 0; flex: 1;">
+                <button type="button" id="clear-file-btn" class="btn btn-red" style="padding: 10px; border-radius: 8px; display:none;" title="إلغاء الملف المرفوع"><i class="fas fa-times"></i></button>
+            </div>
+
+            <hr style="border: 0; border-top: 1px dashed var(--border); margin: 15px 0;">
+
+            <label style="color:var(--gold); font-size:13px; display:block; margin-bottom:10px;"><i class="fas fa-microphone-alt"></i> أو تسجيل صوتي مباشر الآن:</label>
+            
+            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                <button type="button" id="start-record-btn" class="btn btn-blue" style="padding: 8px 15px; font-size: 13px; border-radius: 8px;">
+                    <i class="fas fa-microphone"></i> بدء التسجيل
+                </button>
+                
+                <button type="button" id="stop-record-btn" class="btn btn-red" style="padding: 8px 15px; font-size: 13px; border-radius: 8px; display: none;">
+                    <i class="fas fa-stop-circle"></i> إيقاف
+                </button>
+                
+                <span id="record-timer" style="color: #EF4444; font-family: monospace; font-size: 16px; font-weight: bold; display: none; background: rgba(239, 68, 68, 0.1); padding: 4px 10px; border-radius: 6px;"><i class="fas fa-circle" style="font-size: 10px; animation: blink 1s infinite;"></i> 00:00</span>
+            </div>
+
+            <div id="audio-preview-container" style="margin-top: 15px; display: none; background: #1F2937; padding: 10px; border-radius: 8px; border: 1px solid #374151;">
+                <p style="color:#10B981; font-size:12px; margin-bottom:8px;"><i class="fas fa-check-circle"></i> تم تسجيل المقطع بنجاح:</p>
+                <audio id="audio-preview" controls style="width: 100%; height: 35px;"></audio>
+                <button type="button" id="clear-record-btn" style="background: none; border: none; color: #EF4444; font-size: 12px; margin-top: 10px; cursor: pointer; text-decoration: underline;">
+                    <i class="fas fa-trash"></i> حذف التسجيل وإعادة المحاولة
+                </button>
+            </div>
+
+            ${existing_audio ? `
+            <div id="existing-audio-container" style="margin-top:15px; padding:10px; background:rgba(16,185,129,0.1); border-radius:8px; border:1px solid rgba(16,185,129,0.3); display:flex; justify-content:space-between; align-items:center;">
+                <p style="color:#10B981; font-size:12px; margin:0;"><i class="fas fa-check-circle"></i> يوجد تسجيل صوتي مرفق مسبقاً</p>
+                <button type="button" id="remove-existing-btn" class="btn btn-red" style="padding:4px 8px; font-size:11px; border-radius:6px;"><i class="fas fa-trash"></i> مسح التسجيل</button>
+            </div>
+            ` : ''}
+            
+            <style>
+                @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0; } 100% { opacity: 1; } }
+            </style>
+        </div>
+    `;
+
+    const { value: formValues } = await Swal.fire({ 
+        title: `رد على شكوى (${student_name})`, 
+        html: htmlForm,
+        width: '500px',
+        confirmButtonText: 'حفظ وإرسال <i class="fas fa-paper-plane"></i>', 
+        showCancelButton: true, 
+        cancelButtonText: 'إلغاء', 
+        confirmButtonColor: '#10B981', 
+        background: '#1a1f2c', 
+        color: '#fff', 
+        didOpen: () => {
+            const startBtn = document.getElementById('start-record-btn');
+            const stopBtn = document.getElementById('stop-record-btn');
+            const timerDisplay = document.getElementById('record-timer');
+            const previewContainer = document.getElementById('audio-preview-container');
+            const audioPreview = document.getElementById('audio-preview');
+            const clearRecordBtn = document.getElementById('clear-record-btn');
+            const fileInput = document.getElementById('reply-audio');
+            const clearFileBtn = document.getElementById('clear-file-btn');
+            const removeExistingBtn = document.getElementById('remove-existing-btn');
+
+            if(removeExistingBtn) {
+                removeExistingBtn.onclick = () => {
+                    removeExistingAudio = true;
+                    document.getElementById('existing-audio-container').style.display = 'none';
+                };
+            }
+
+            fileInput.onchange = () => {
+                if (fileInput.files.length > 0) {
+                    startBtn.disabled = true; startBtn.style.opacity = '0.5';
+                    clearFileBtn.style.display = 'inline-block';
+                } else {
+                    startBtn.disabled = false; startBtn.style.opacity = '1';
+                    clearFileBtn.style.display = 'none';
+                }
+            };
+
+            clearFileBtn.onclick = () => {
+                fileInput.value = '';
+                startBtn.disabled = false; startBtn.style.opacity = '1';
+                clearFileBtn.style.display = 'none';
+            };
+
+            startBtn.onclick = async () => {
+                try {
+                    mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(mediaStream);
+                    audioChunks = [];
+
+                    mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
+
+                    mediaRecorder.onstop = () => {
+                        // إضافة الصيغة بشكل صريح ليعمل لدى الطالب
+                        const audioType = mediaRecorder.mimeType || 'audio/webm';
+                        const audioBlob = new Blob(audioChunks, { type: audioType }); 
+                        const audioUrl = URL.createObjectURL(audioBlob);
+                        audioPreview.src = audioUrl;
+                        previewContainer.style.display = 'block';
+
+                        const reader = new FileReader();
+                        reader.readAsDataURL(audioBlob);
+                        reader.onloadend = () => { recordedAudioBase64 = reader.result; };
+
+                        mediaStream.getTracks().forEach(track => track.stop());
+                    };
+
+                    mediaRecorder.start();
+                    fileInput.disabled = true; 
+                    startBtn.style.display = 'none';
+                    stopBtn.style.display = 'inline-block';
+                    timerDisplay.style.display = 'inline-block';
+                    
+                    recordingSeconds = 0;
+                    timerDisplay.innerHTML = `<i class="fas fa-circle" style="font-size: 10px; animation: blink 1s infinite;"></i> 00:00`;
+                    
+                    recordInterval = setInterval(() => {
+                        recordingSeconds++;
+                        const mins = String(Math.floor(recordingSeconds / 60)).padStart(2, '0');
+                        const secs = String(recordingSeconds % 60).padStart(2, '0');
+                        timerDisplay.innerHTML = `<i class="fas fa-circle" style="font-size: 10px; animation: blink 1s infinite;"></i> ${mins}:${secs}`;
+                    }, 1000);
+
+                } catch (err) {
+                    Swal.showValidationMessage('يرجى السماح للمتصفح بالوصول إلى الميكروفون!');
+                }
+            };
+
+            stopBtn.onclick = () => {
+                if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                    mediaRecorder.stop();
+                    clearInterval(recordInterval);
+                    stopBtn.style.display = 'none';
+                    timerDisplay.style.display = 'none';
+                }
+            };
+
+            clearRecordBtn.onclick = () => {
+                recordedAudioBase64 = null;
+                audioPreview.src = '';
+                previewContainer.style.display = 'none';
+                startBtn.style.display = 'inline-block';
+                fileInput.disabled = false; 
+            };
+        },
+        willClose: () => {
+            if (mediaStream) mediaStream.getTracks().forEach(track => track.stop());
+            if (recordInterval) clearInterval(recordInterval);
+        },
+        preConfirm: () => {
+            const replyText = document.getElementById('reply-text').value;
+            const audioFile = document.getElementById('reply-audio').files[0];
+            
+            let finalAudio = existing_audio;
+            if (removeExistingAudio) finalAudio = ''; // تم حذف الصوت القديم
+            if (recordedAudioBase64) finalAudio = recordedAudioBase64; // تم تسجيل مقطع جديد
+            
+            if (!replyText.trim() && !audioFile && !finalAudio) {
+                Swal.showValidationMessage('يجب كتابة رد نصي أو إرفاق/تسجيل ملف صوتي!');
+                return false;
+            }
+
+            if (audioFile) {
+                if (audioFile.size > 5 * 1024 * 1024) {
+                    Swal.showValidationMessage('حجم الملف الصوتي كبير جداً (الحد الأقصى 5 ميجابايت)');
+                    return false;
+                }
+                return new Promise(resolve => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => resolve({ text: replyText, audio: e.target.result });
+                    reader.readAsDataURL(audioFile);
+                });
+            }
+            
+            return { text: replyText, audio: finalAudio };
+        } 
+    });
+
+    if(formValues) {
         Swal.fire({title: 'جاري الإرسال...', background: '#1a1f2c', color: '#fff', didOpen: () => Swal.showLoading()});
-        try { await postAdminAction({action: 'reply_complaint', tracking_id: tracking_id, reply: replyText}); await refreshData(); Swal.fire({...swalDark, icon: 'success', title: 'تم الإرسال بنجاح!', timer: 1500, showConfirmButton: false}); } catch(e) {}
+        try { 
+            await postAdminAction({
+                action: 'reply_complaint', 
+                tracking_id: tracking_id, 
+                reply: formValues.text,
+                audio_record: formValues.audio
+            }); 
+            await refreshData(); 
+            Swal.fire({...swalDark, icon: 'success', title: 'تم الإرسال بنجاح!', timer: 1500, showConfirmButton: false}); 
+        } catch(e) {}
     }
 }
 
-function editReply(tracking_id, student_name) { const complaint = fullComplaints.find(c => c.tracking_id === tracking_id); if(complaint) replyComplaint(tracking_id, student_name, complaint.admin_reply); }
+function editReply(tracking_id, student_name) { 
+    const complaint = fullComplaints.find(c => c.tracking_id === tracking_id); 
+    if(complaint) {
+        replyComplaint(tracking_id, student_name, complaint.admin_reply, complaint.audio_record || ''); 
+    }
+}
+
 async function updateComplaintStatus(tracking_id, action) { let confirmMsg = action === 'mark_spam' ? 'نقل الشكوى للمرفوضين (الأسئ)؟' : (action === 'delete_complaint' ? 'حذف الشكوى نهائياً؟' : 'استرجاع الشكوى لرد عليها؟'); if(confirm(confirmMsg)) { try { await postAdminAction({action: action, tracking_id: tracking_id}); await refreshData(); } catch(e) {} } }
+
 async function wipeDatabase() {
     const { value: password } = await Swal.fire({...swalDark, icon: 'warning', title: 'تدمير قاعدة البيانات!', html: '<p style="color:#EF4444; font-size:14px;">سيتم مسح (المواد، اللجان، الشكاوى، الطلاب) بالكامل ولن يمكن استرجاعها.</p>', input: 'password', inputPlaceholder: 'أدخل الباسورد الخاص بك للتأكيد', showCancelButton: true, confirmButtonColor: '#EF4444', confirmButtonText: 'تأكيد التدمير', cancelButtonText: 'إلغاء' });
     if (password) {
