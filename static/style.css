@@ -214,3 +214,19 @@ footer { text-align: center; padding: 20px 15px; background: #0a0e17; border-top
     .logo span { display: none; }
     .btn-outline, .btn-danger-outline { font-size: 10px; padding: 5px 6px; }
 }
+audio {
+    background-color: #1F2937;
+    border-radius: 8px;
+}
+audio::-webkit-media-controls-panel {
+    background-color: #1F2937;
+}
+audio::-webkit-media-controls-play-button,
+audio::-webkit-media-controls-mute-button {
+    background-color: var(--gold);
+    border-radius: 50%;
+}
+audio::-webkit-media-controls-current-time-display,
+audio::-webkit-media-controls-time-remaining-display {
+    color: #fff;
+}
