@@ -73,6 +73,7 @@ async function postAdminAction(bodyData) {
     });
     const data = await res.json();
     if (res.status === 401 || data.status === 'unauthorized') {
+        // العودة لشاشة الدخول بصمت عند انتهاء الجلسة
         document.getElementById('login-screen').style.display = 'flex';
         document.getElementById('main-app').style.display = 'none';
         throw new Error("Unauthorized");
@@ -104,6 +105,7 @@ async function handleLogin() {
         const data = await res.json();
         
         if(data.status === 'success') {
+            sessionStorage.removeItem('has_recorded_audio'); // تصفير عداد التسجيل عند الدخول
             Swal.close();
             document.getElementById('user').value = '';
             document.getElementById('pass').value = '';
@@ -123,6 +125,7 @@ async function refreshData() {
     const data = await res.json();
     
     if (res.status === 401 || data.status === 'unauthorized' || !data.currentAdmin) {
+        // العودة لشاشة الدخول بصمت عند انتهاء الجلسة
         document.getElementById('login-screen').style.display = 'flex';
         document.getElementById('main-app').style.display = 'none';
         return;
@@ -678,53 +681,73 @@ async function replyComplaint(tracking_id, student_name, existing_reply = '', ex
     let mediaStream = null;
     let removeExistingAudio = false;
 
+    const hasUsedAudio = sessionStorage.getItem('has_recorded_audio') === 'true';
+    let audioUI = '';
+
+    if (hasUsedAudio && !existing_audio) {
+        audioUI = `
+            <div style="margin-top: 15px; text-align: right; background: rgba(239,68,68,0.1); padding: 15px; border-radius: 8px; border: 1px solid rgba(239,68,68,0.3);">
+                <p style="color:#EF4444; font-size:13px; margin:0; line-height:1.5;"><i class="fas fa-lock"></i> لقد قمت بإرفاق تسجيل صوتي في شكوى أخرى خلال هذه الجلسة. النظام يسمح بتسجيل واحد فقط لكل جلسة للحفاظ على الاستقرار. يرجى <b>تسجيل الخروج والدخول مجدداً</b> لتتمكن من التسجيل مرة أخرى.</p>
+            </div>
+        `;
+    } else {
+        let recordUploadHtml = '';
+        if (hasUsedAudio) {
+            recordUploadHtml = `<p style="color:#EF4444; font-size:12px; margin-bottom:10px;"><i class="fas fa-lock"></i> لقد استنفدت محاولتك في التسجيل خلال هذه الجلسة. يمكنك فقط الاحتفاظ بالتسجيل القديم أو حذفه.</p>`;
+        } else {
+            recordUploadHtml = `
+                <label style="color:var(--text-muted); font-size:13px; display:block; margin-bottom:8px;"><i class="fas fa-file-upload"></i> إرفاق ملف صوتي (اختياري):</label>
+                
+                <div style="display:flex; gap:10px; align-items:center; margin-bottom: 15px;">
+                    <input type="file" id="reply-audio" accept="audio/*" class="login-input" style="padding: 10px; margin: 0; flex: 1;">
+                    <button type="button" id="clear-file-btn" class="btn btn-red" style="padding: 10px; border-radius: 8px; display:none;" title="إلغاء الملف المرفوع"><i class="fas fa-times"></i></button>
+                </div>
+
+                <hr style="border: 0; border-top: 1px dashed var(--border); margin: 15px 0;">
+
+                <label style="color:var(--gold); font-size:13px; display:block; margin-bottom:10px;"><i class="fas fa-microphone-alt"></i> أو تسجيل صوتي مباشر الآن:</label>
+                
+                <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                    <button type="button" id="start-record-btn" class="btn btn-blue" style="padding: 8px 15px; font-size: 13px; border-radius: 8px;">
+                        <i class="fas fa-microphone"></i> بدء التسجيل
+                    </button>
+                    
+                    <button type="button" id="stop-record-btn" class="btn btn-red" style="padding: 8px 15px; font-size: 13px; border-radius: 8px; display: none;">
+                        <i class="fas fa-stop-circle"></i> إيقاف
+                    </button>
+                    
+                    <span id="record-timer" style="color: #EF4444; font-family: monospace; font-size: 16px; font-weight: bold; display: none; background: rgba(239, 68, 68, 0.1); padding: 4px 10px; border-radius: 6px;"><i class="fas fa-circle" style="font-size: 10px; animation: blink 1s infinite;"></i> 00:00</span>
+                </div>
+
+                <div id="audio-preview-container" style="margin-top: 15px; display: none; background: #1F2937; padding: 10px; border-radius: 8px; border: 1px solid #374151;">
+                    <p style="color:#10B981; font-size:12px; margin-bottom:8px;"><i class="fas fa-check-circle"></i> تم تسجيل المقطع بنجاح:</p>
+                    <audio id="audio-preview" controls style="width: 100%; height: 35px;"></audio>
+                    <button type="button" id="clear-record-btn" style="background: none; border: none; color: #EF4444; font-size: 12px; margin-top: 10px; cursor: pointer; text-decoration: underline;">
+                        <i class="fas fa-trash"></i> حذف التسجيل وإعادة المحاولة
+                    </button>
+                </div>
+            `;
+        }
+
+        audioUI = `
+            <div style="margin-top: 15px; text-align: right; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px; border: 1px solid var(--border);">
+                ${recordUploadHtml}
+                ${existing_audio ? `
+                <div id="existing-audio-container" style="margin-top:15px; padding:10px; background:rgba(16,185,129,0.1); border-radius:8px; border:1px solid rgba(16,185,129,0.3); display:flex; justify-content:space-between; align-items:center;">
+                    <p style="color:#10B981; font-size:12px; margin:0;"><i class="fas fa-check-circle"></i> يوجد تسجيل صوتي مرفق مسبقاً</p>
+                    <button type="button" id="remove-existing-btn" class="btn btn-red" style="padding:4px 8px; font-size:11px; border-radius:6px;"><i class="fas fa-trash"></i> مسح التسجيل</button>
+                </div>
+                ` : ''}
+                <style>
+                    @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0; } 100% { opacity: 1; } }
+                </style>
+            </div>
+        `;
+    }
+
     const htmlForm = `
         <textarea id="reply-text" class="swal2-textarea" placeholder="اكتب رسالتك للطالب هنا..." style="margin: 0; width: 100%; box-sizing: border-box;">${existing_reply}</textarea>
-        
-        <div style="margin-top: 15px; text-align: right; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px; border: 1px solid var(--border);">
-            
-            <label style="color:var(--text-muted); font-size:13px; display:block; margin-bottom:8px;"><i class="fas fa-file-upload"></i> إرفاق ملف صوتي (اختياري):</label>
-            
-            <div style="display:flex; gap:10px; align-items:center; margin-bottom: 15px;">
-                <input type="file" id="reply-audio" accept="audio/*" class="login-input" style="padding: 10px; margin: 0; flex: 1;">
-                <button type="button" id="clear-file-btn" class="btn btn-red" style="padding: 10px; border-radius: 8px; display:none;" title="إلغاء الملف المرفوع"><i class="fas fa-times"></i></button>
-            </div>
-
-            <hr style="border: 0; border-top: 1px dashed var(--border); margin: 15px 0;">
-
-            <label style="color:var(--gold); font-size:13px; display:block; margin-bottom:10px;"><i class="fas fa-microphone-alt"></i> أو تسجيل صوتي مباشر الآن:</label>
-            
-            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-                <button type="button" id="start-record-btn" class="btn btn-blue" style="padding: 8px 15px; font-size: 13px; border-radius: 8px;">
-                    <i class="fas fa-microphone"></i> بدء التسجيل
-                </button>
-                
-                <button type="button" id="stop-record-btn" class="btn btn-red" style="padding: 8px 15px; font-size: 13px; border-radius: 8px; display: none;">
-                    <i class="fas fa-stop-circle"></i> إيقاف
-                </button>
-                
-                <span id="record-timer" style="color: #EF4444; font-family: monospace; font-size: 16px; font-weight: bold; display: none; background: rgba(239, 68, 68, 0.1); padding: 4px 10px; border-radius: 6px;"><i class="fas fa-circle" style="font-size: 10px; animation: blink 1s infinite;"></i> 00:00</span>
-            </div>
-
-            <div id="audio-preview-container" style="margin-top: 15px; display: none; background: #1F2937; padding: 10px; border-radius: 8px; border: 1px solid #374151;">
-                <p style="color:#10B981; font-size:12px; margin-bottom:8px;"><i class="fas fa-check-circle"></i> تم تسجيل المقطع بنجاح:</p>
-                <audio id="audio-preview" controls style="width: 100%; height: 35px;"></audio>
-                <button type="button" id="clear-record-btn" style="background: none; border: none; color: #EF4444; font-size: 12px; margin-top: 10px; cursor: pointer; text-decoration: underline;">
-                    <i class="fas fa-trash"></i> حذف التسجيل وإعادة المحاولة
-                </button>
-            </div>
-
-            ${existing_audio ? `
-            <div id="existing-audio-container" style="margin-top:15px; padding:10px; background:rgba(16,185,129,0.1); border-radius:8px; border:1px solid rgba(16,185,129,0.3); display:flex; justify-content:space-between; align-items:center;">
-                <p style="color:#10B981; font-size:12px; margin:0;"><i class="fas fa-check-circle"></i> يوجد تسجيل صوتي مرفق مسبقاً</p>
-                <button type="button" id="remove-existing-btn" class="btn btn-red" style="padding:4px 8px; font-size:11px; border-radius:6px;"><i class="fas fa-trash"></i> مسح التسجيل</button>
-            </div>
-            ` : ''}
-            
-            <style>
-                @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0; } 100% { opacity: 1; } }
-            </style>
-        </div>
+        ${audioUI}
     `;
 
     const { value: formValues } = await Swal.fire({ 
@@ -755,81 +778,83 @@ async function replyComplaint(tracking_id, student_name, existing_reply = '', ex
                 };
             }
 
-            fileInput.onchange = () => {
-                if (fileInput.files.length > 0) {
-                    startBtn.disabled = true; startBtn.style.opacity = '0.5';
-                    clearFileBtn.style.display = 'inline-block';
-                } else {
+            if (fileInput && startBtn) {
+                fileInput.onchange = () => {
+                    if (fileInput.files.length > 0) {
+                        startBtn.disabled = true; startBtn.style.opacity = '0.5';
+                        clearFileBtn.style.display = 'inline-block';
+                    } else {
+                        startBtn.disabled = false; startBtn.style.opacity = '1';
+                        clearFileBtn.style.display = 'none';
+                    }
+                };
+
+                clearFileBtn.onclick = () => {
+                    fileInput.value = '';
                     startBtn.disabled = false; startBtn.style.opacity = '1';
                     clearFileBtn.style.display = 'none';
-                }
-            };
+                };
 
-            clearFileBtn.onclick = () => {
-                fileInput.value = '';
-                startBtn.disabled = false; startBtn.style.opacity = '1';
-                clearFileBtn.style.display = 'none';
-            };
+                startBtn.onclick = async () => {
+                    try {
+                        mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                        mediaRecorder = new MediaRecorder(mediaStream);
+                        audioChunks = [];
 
-            startBtn.onclick = async () => {
-                try {
-                    mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                    mediaRecorder = new MediaRecorder(mediaStream);
-                    audioChunks = [];
+                        mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
 
-                    mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
+                        mediaRecorder.onstop = () => {
+                            const audioType = mediaRecorder.mimeType || 'audio/webm';
+                            const audioBlob = new Blob(audioChunks, { type: audioType }); 
+                            const audioUrl = URL.createObjectURL(audioBlob);
+                            audioPreview.src = audioUrl;
+                            previewContainer.style.display = 'block';
 
-                    mediaRecorder.onstop = () => {
-                        const audioType = mediaRecorder.mimeType || 'audio/webm';
-                        const audioBlob = new Blob(audioChunks, { type: audioType }); 
-                        const audioUrl = URL.createObjectURL(audioBlob);
-                        audioPreview.src = audioUrl;
-                        previewContainer.style.display = 'block';
+                            const reader = new FileReader();
+                            reader.readAsDataURL(audioBlob);
+                            reader.onloadend = () => { recordedAudioBase64 = reader.result; };
 
-                        const reader = new FileReader();
-                        reader.readAsDataURL(audioBlob);
-                        reader.onloadend = () => { recordedAudioBase64 = reader.result; };
+                            mediaStream.getTracks().forEach(track => track.stop());
+                        };
 
-                        mediaStream.getTracks().forEach(track => track.stop());
-                    };
+                        mediaRecorder.start();
+                        fileInput.disabled = true; 
+                        startBtn.style.display = 'none';
+                        stopBtn.style.display = 'inline-block';
+                        timerDisplay.style.display = 'inline-block';
+                        
+                        recordingSeconds = 0;
+                        timerDisplay.innerHTML = `<i class="fas fa-circle" style="font-size: 10px; animation: blink 1s infinite;"></i> 00:00`;
+                        
+                        recordInterval = setInterval(() => {
+                            recordingSeconds++;
+                            const mins = String(Math.floor(recordingSeconds / 60)).padStart(2, '0');
+                            const secs = String(recordingSeconds % 60).padStart(2, '0');
+                            timerDisplay.innerHTML = `<i class="fas fa-circle" style="font-size: 10px; animation: blink 1s infinite;"></i> ${mins}:${secs}`;
+                        }, 1000);
 
-                    mediaRecorder.start();
-                    fileInput.disabled = true; 
-                    startBtn.style.display = 'none';
-                    stopBtn.style.display = 'inline-block';
-                    timerDisplay.style.display = 'inline-block';
-                    
-                    recordingSeconds = 0;
-                    timerDisplay.innerHTML = `<i class="fas fa-circle" style="font-size: 10px; animation: blink 1s infinite;"></i> 00:00`;
-                    
-                    recordInterval = setInterval(() => {
-                        recordingSeconds++;
-                        const mins = String(Math.floor(recordingSeconds / 60)).padStart(2, '0');
-                        const secs = String(recordingSeconds % 60).padStart(2, '0');
-                        timerDisplay.innerHTML = `<i class="fas fa-circle" style="font-size: 10px; animation: blink 1s infinite;"></i> ${mins}:${secs}`;
-                    }, 1000);
+                    } catch (err) {
+                        Swal.showValidationMessage('يرجى السماح للمتصفح بالوصول إلى الميكروفون!');
+                    }
+                };
 
-                } catch (err) {
-                    Swal.showValidationMessage('يرجى السماح للمتصفح بالوصول إلى الميكروفون!');
-                }
-            };
+                stopBtn.onclick = () => {
+                    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                        mediaRecorder.stop();
+                        clearInterval(recordInterval);
+                        stopBtn.style.display = 'none';
+                        timerDisplay.style.display = 'none';
+                    }
+                };
 
-            stopBtn.onclick = () => {
-                if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-                    mediaRecorder.stop();
-                    clearInterval(recordInterval);
-                    stopBtn.style.display = 'none';
-                    timerDisplay.style.display = 'none';
-                }
-            };
-
-            clearRecordBtn.onclick = () => {
-                recordedAudioBase64 = null;
-                audioPreview.src = '';
-                previewContainer.style.display = 'none';
-                startBtn.style.display = 'inline-block';
-                fileInput.disabled = false; 
-            };
+                clearRecordBtn.onclick = () => {
+                    recordedAudioBase64 = null;
+                    audioPreview.src = '';
+                    previewContainer.style.display = 'none';
+                    startBtn.style.display = 'inline-block';
+                    fileInput.disabled = false; 
+                };
+            }
         },
         willClose: () => {
             if (mediaStream) mediaStream.getTracks().forEach(track => track.stop());
@@ -837,7 +862,8 @@ async function replyComplaint(tracking_id, student_name, existing_reply = '', ex
         },
         preConfirm: () => {
             const replyText = document.getElementById('reply-text').value;
-            const audioFile = document.getElementById('reply-audio').files[0];
+            const fileInput = document.getElementById('reply-audio');
+            const audioFile = fileInput ? fileInput.files[0] : null;
             
             let finalAudio = existing_audio;
             if (removeExistingAudio) finalAudio = ''; 
@@ -873,6 +899,11 @@ async function replyComplaint(tracking_id, student_name, existing_reply = '', ex
                 reply: formValues.text,
                 audio_record: formValues.audio
             }); 
+            
+            if(formValues.audio && formValues.audio !== existing_audio) {
+                sessionStorage.setItem('has_recorded_audio', 'true');
+            }
+
             await refreshData(); 
             Swal.fire({...swalDark, icon: 'success', title: 'تم الإرسال بنجاح!', timer: 1500, showConfirmButton: false}); 
         } catch(e) {}
