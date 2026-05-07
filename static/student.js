@@ -202,10 +202,24 @@ function showExistingComplaintInSubject(comp, subName, isComplaintsOpen) {
         }
     } else if (comp.status === 'resolved') {
         statusBadge = `<span style="background:rgba(16,185,129,0.1); color:#10B981; border:1px solid #10B981; padding:4px 8px; border-radius:6px; font-size:12px; font-weight:bold;"><i class="fas fa-check-double"></i> تم الرد</span>`;
+        
+        let audioPlayer = '';
+        if (comp.audio_record) {
+            audioPlayer = `
+                <div style="margin-top: 15px;">
+                    <audio controls style="width: 100%; height: 40px; border-radius: 8px; outline: none;">
+                        <source src="${comp.audio_record}">
+                        متصفحك لا يدعم تشغيل الصوت.
+                    </audio>
+                </div>
+            `;
+        }
+
         replySection = `
             <div style="background:rgba(16, 185, 129, 0.1); border-right:3px solid #10B981; padding:12px; border-radius:8px; margin-top:15px; text-align:right;">
                 <p style="color:#10B981; font-weight:bold; font-size:12px; margin-bottom:5px;">رد الإدارة (${comp.replied_by}):</p>
                 <p style="color:#fff; font-size:14px; line-height:1.5;">${comp.admin_reply}</p>
+                ${audioPlayer}
             </div>
         `;
     } else if (comp.status === 'spam') {
@@ -297,7 +311,20 @@ function renderMyComplaints(complaints) {
             }
         } else if (c.status === 'resolved') {
             statusBadge = `<span class="badge-resolved"><i class="fas fa-check-double"></i> تم الرد</span>`;
-            replySection = `<div class="comp-reply"><p style="color:#10B981; font-weight:bold; font-size:12px; margin-bottom:5px;">رد الإدارة (${c.replied_by}):</p><p style="color:#fff; font-size:14px; line-height:1.5;">${c.admin_reply}</p></div>`;
+            
+            let audioPlayer = '';
+            if (c.audio_record) {
+                audioPlayer = `
+                    <div style="margin-top: 12px; padding-top: 10px; border-top: 1px dashed rgba(16, 185, 129, 0.3);">
+                        <audio controls style="width: 100%; height: 35px; border-radius: 8px; outline: none;">
+                            <source src="${c.audio_record}">
+                            متصفحك لا يدعم تشغيل الصوت.
+                        </audio>
+                    </div>
+                `;
+            }
+
+            replySection = `<div class="comp-reply"><p style="color:#10B981; font-weight:bold; font-size:12px; margin-bottom:5px;">رد الإدارة (${c.replied_by}):</p><p style="color:#fff; font-size:14px; line-height:1.5;">${c.admin_reply}</p>${audioPlayer}</div>`;
         } else if (c.status === 'spam') {
             statusBadge = `<span class="badge-spam"><i class="fas fa-ban"></i> مرفوضة</span>`;
         }
