@@ -178,7 +178,7 @@ async function checkMyID(subId, subName, isComplaintsOpen) {
                 if (result.isDenied && isComplaintsOpen) openWizard(subId, subName, data.committee_name); 
             });
         } else {
-            if (data.message.includes("تسجيل الدخول")) Swal.fire({icon: 'error', title: 'تنبيه أمني', text: data.message, background:'#1a1f2c', color:'#fff', confirmButtonText: 'موافق'}).then(() => { localStorage.clear(); location.reload(); });
+            if (data.message.includes("تسجيل الدخول")) { localStorage.clear(); location.reload(); }
             else Swal.fire({ icon: 'error', title: 'عفواً', html: `<p style="line-height:1.6; font-size:14px;">رقمك <b style="color:var(--gold); font-family:monospace;">(${stId})</b> غير مسجل في أي لجنة لهذه المادة.<br><span style="font-size:12px; color:var(--text-muted);">يرجى مراجعة الكنترول.</span></p>`, background:'#1a1f2c', color:'#fff', confirmButtonColor: '#EF4444' });
         }
     } catch(e) { Swal.fire({icon: 'error', text: 'حدث خطأ بالشبكة.', background:'#1a1f2c', color:'#fff'}); }
@@ -273,7 +273,7 @@ async function submitWizard() {
         const res = await fetch('/api/submit-complaint', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ subject_id: currentSubId, subject_name: currentSubName, student_id: localStorage.getItem('drselem_student_id'), password: localStorage.getItem('drselem_student_pass'), student_name: localStorage.getItem('drselem_student_name'), assigned_committee: currentAssignedCom, actual_committee: actualCom, problem: prob }) });
         const data = await res.json();
         if(data.status === 'success') { closeWizard(); Swal.fire({ html: `<i class="fas fa-shield-check fa-3x" style="color:var(--gold); margin-bottom:10px;"></i><h2 style="color:#fff; font-size:20px;">تم استلام شكواك بنجاح</h2><p style="color:#9CA3AF; font-size:14px; margin-top:10px;">يمكنك متابعة الرد أو التعديل من خلال الضغط على المادة أو (سجل شكاوي).</p>`, background: '#1a1f2c', confirmButtonColor: '#FFB300', confirmButtonText: 'حسناً' }); } 
-        else { if (data.message.includes("تسجيل الدخول")) Swal.fire({icon: 'error', title: 'تنبيه أمني', text: data.message, background:'#1a1f2c', color:'#fff', confirmButtonText: 'موافق'}).then(() => { localStorage.clear(); location.reload(); }); else Swal.fire({icon: 'error', text: data.message, background:'#1a1f2c', color:'#fff'}); }
+        else { if (data.message.includes("تسجيل الدخول")) { localStorage.clear(); location.reload(); } else Swal.fire({icon: 'error', text: data.message, background:'#1a1f2c', color:'#fff'}); }
     } catch (e) { Swal.fire({icon: 'error', text: 'حدث خطأ أثناء الإرسال.', background:'#1a1f2c', color:'#fff'}); }
 }
 
@@ -283,7 +283,7 @@ async function openMyComplaints() {
         const res = await fetch('/api/student-action', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ action: 'get_complaints', student_id: localStorage.getItem('drselem_student_id'), password: localStorage.getItem('drselem_student_pass') }) });
         const data = await res.json(); document.getElementById('loading-screen').style.display = 'none';
         if (data.status === 'success') { renderMyComplaints(data.complaints); document.getElementById('complaints-screen').style.display = 'flex'; } 
-        else { if (data.message.includes("تسجيل الدخول")) Swal.fire({icon: 'error', title: 'تنبيه أمني', text: data.message, background:'#1a1f2c', color:'#fff', confirmButtonText: 'موافق'}).then(() => { localStorage.clear(); location.reload(); }); else Swal.fire({icon: 'error', text: data.message, background:'#1a1f2c', color:'#fff'}); }
+        else { if (data.message.includes("تسجيل الدخول")) { localStorage.clear(); location.reload(); } else Swal.fire({icon: 'error', text: data.message, background:'#1a1f2c', color:'#fff'}); }
     } catch(e) { document.getElementById('loading-screen').style.display = 'none'; Swal.fire({icon: 'error', text: 'خطأ في الاتصال بالخادم.', background:'#1a1f2c', color:'#fff'}); }
 }
 
@@ -421,11 +421,8 @@ async function editMyComplaint(trackingId) {
                 }); 
             } 
             else { 
-                if (data.message.includes("تسجيل الدخول")) {
-                    Swal.fire({icon: 'error', title: 'تنبيه أمني', text: data.message, background:'#1a1f2c', color:'#fff', confirmButtonText: 'موافق'}).then(() => { localStorage.clear(); location.reload(); }); 
-                } else {
-                    Swal.fire({icon: 'error', text: data.message, background: '#1a1f2c', color: '#fff'}); 
-                }
+                if (data.message.includes("تسجيل الدخول")) { localStorage.clear(); location.reload(); } 
+                else { Swal.fire({icon: 'error', text: data.message, background: '#1a1f2c', color: '#fff'}); }
             }
         } catch(e) { Swal.fire({icon: 'error', text: 'خطأ في الاتصال بالخادم.', background: '#1a1f2c', color: '#fff'}); }
     }
@@ -444,7 +441,7 @@ async function deleteMyComplaint(trackingId) {
                     if(document.getElementById('complaints-screen').style.display === 'flex') openMyComplaints();
                 });
             } 
-            else { if (data.message.includes("تسجيل الدخول")) Swal.fire({icon: 'error', title: 'تنبيه أمني', text: data.message, background:'#1a1f2c', color:'#fff', confirmButtonText: 'موافق'}).then(() => { localStorage.clear(); location.reload(); }); else Swal.fire({...swalDark, icon: 'error', text: data.message}); }
+            else { if (data.message.includes("تسجيل الدخول")) { localStorage.clear(); location.reload(); } else Swal.fire({...swalDark, icon: 'error', text: data.message}); }
         } catch(e) { Swal.fire({...swalDark, icon: 'error', text: 'خطأ في الاتصال بالخادم.'}); }
     }
 }
