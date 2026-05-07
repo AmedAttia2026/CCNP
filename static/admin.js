@@ -25,15 +25,12 @@ window.onload = async () => {
 
     if (savedAdminUser && savedAdminPass) {
         document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('main-app').style.display = 'none';
         
-        Swal.fire({
-            title: 'جاري استعادة الجلسة...',
-            background: '#1a1f2c',
-            color: '#fff',
-            allowOutsideClick: false,
-            showConfirmButton: false,
-            didOpen: () => Swal.showLoading()
-        });
+        // إظهار شاشة التحميل الدائرية الصفراء
+        if(document.getElementById('loading-screen')) {
+            document.getElementById('loading-screen').style.display = 'flex';
+        }
 
         document.getElementById('user').value = savedAdminUser;
         document.getElementById('pass').value = savedAdminPass;
@@ -96,7 +93,6 @@ async function postAdminAction(bodyData) {
     if (res.status === 401 || data.status === 'unauthorized') {
         document.getElementById('login-screen').style.display = 'flex';
         document.getElementById('main-app').style.display = 'none';
-        Swal.close();
         throw new Error("Unauthorized");
     }
     return data;
@@ -118,7 +114,10 @@ async function handleLogin(isSilent = false) {
         return;
     }
     
-    if (!isSilent) Swal.fire({title: 'جاري التحقق...', background: '#1a1f2c', color: '#fff', allowOutsideClick: false, showConfirmButton: false, didOpen: () => Swal.showLoading()});
+    if (!isSilent) {
+        // إظهار شاشة التحميل الدائرية حتى للمستخدم عند تسجيل الدخول اليدوي
+        document.getElementById('loading-screen').style.display = 'flex';
+    }
     
     try {
         const res = await fetch('/secure-auth-gateway-2026-x9v2-pl7q-a84m', { 
@@ -136,24 +135,30 @@ async function handleLogin(isSilent = false) {
             document.getElementById('pass').value = '';
             
             await refreshData(); 
-            Swal.close(); 
+            
+            // إخفاء التحميل بعد النجاح
+            if(document.getElementById('loading-screen')) {
+                document.getElementById('loading-screen').style.display = 'none';
+            }
         } else {
             if (isSilent) {
                 localStorage.removeItem('nexus_admin_user');
                 localStorage.removeItem('nexus_admin_pass');
+                if(document.getElementById('loading-screen')) document.getElementById('loading-screen').style.display = 'none';
                 document.getElementById('login-screen').style.display = 'flex';
-                Swal.close();
             } else {
                 document.getElementById('pass').value = ''; 
+                if(document.getElementById('loading-screen')) document.getElementById('loading-screen').style.display = 'none';
                 Swal.fire({...swalDark, icon: 'error', text: data.message});
             }
         }
     } catch(e) {
         if (isSilent) {
+            if(document.getElementById('loading-screen')) document.getElementById('loading-screen').style.display = 'none';
             document.getElementById('login-screen').style.display = 'flex';
-            Swal.close();
         } else {
             document.getElementById('pass').value = ''; 
+            if(document.getElementById('loading-screen')) document.getElementById('loading-screen').style.display = 'none';
             Swal.fire({...swalDark, icon: 'error', text: 'حدث خطأ في الاتصال أو تم حظرك مؤقتاً بسبب كثرة المحاولات.'});
         }
     }
@@ -179,101 +184,110 @@ function logoutAdmin() {
 }
 
 async function refreshData() {
-    const res = await fetch('/api/admin-data');
-    const data = await res.json();
-    
-    if (res.status === 401 || data.status === 'unauthorized' || !data.currentAdmin) {
-        document.getElementById('login-screen').style.display = 'flex';
-        document.getElementById('main-app').style.display = 'none';
-        return;
-    }
-
-    document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('main-app').style.display = 'flex';
-
-    me = data.currentAdmin;
-    globalSubjects = data.subjects || [];
-    globalCommittees = data.committees || [];
-    fullComplaints = data.complaints || [];
-    globalStaff = data.staff || [];
-    globalStudents = data.students || [];
-    
-    const yearOrder = {
-        "الفرقة الأولى": 1,
-        "الفرقة الثانية": 2,
-        "الفرقة الثالثة": 3,
-        "الفرقة الرابعة": 4
-    };
-    
-    globalSubjects.sort((a, b) => {
-        const yearA = yearOrder[a.year] || 99;
-        const yearB = yearOrder[b.year] || 99;
-        if (yearA !== yearB) return yearA - yearB;
-        return (a.department || '').localeCompare(b.department || '', 'ar');
-    });
-    
-    let roleBadge = '';
-    if(me.role === 'super_admin') roleBadge = '<span style="color:var(--gold); font-size:12px; background:#000; padding:2px 8px; border-radius:10px;">الآدمن الرئيسي</span>';
-    else if(me.role === 'doctor') roleBadge = '<span style="color:#10B981; font-size:12px; background:#000; padding:2px 8px; border-radius:10px;">دكتور مادة</span>';
-    else roleBadge = '<span style="color:#3B82F6; font-size:12px; background:#000; padding:2px 8px; border-radius:10px;">معيد</span>';
-    
-    document.getElementById('welcome-text').innerHTML = `مرحباً، ${me.name} ${roleBadge}`;
-
-    if(me.role !== 'super_admin') document.querySelectorAll('.super-only').forEach(e => e.style.display = 'none');
-    if(me.role === 'ta') document.querySelectorAll('.staff-manager-only').forEach(e => e.style.display = 'none');
-
-    if(me.role === 'super_admin' || me.role === 'doctor') {
-        let visibleStaff = globalStaff;
-        if (me.role === 'doctor') {
-            visibleStaff = globalStaff.filter(s => s.allowed_subjects && s.allowed_subjects.length > 0);
+    try {
+        const res = await fetch('/api/admin-data');
+        const data = await res.json();
+        
+        // إخفاء التحميل دائماً سواء نجح أو فشل
+        if(document.getElementById('loading-screen')) {
+            document.getElementById('loading-screen').style.display = 'none';
         }
 
-        document.getElementById('staff-list').innerHTML = visibleStaff.map(s => {
-            let allowedNames = '-';
-            if (s.allowed_subjects && s.allowed_subjects.length > 0) {
-                allowedNames = s.allowed_subjects.map(subId => {
-                    let fSub = globalSubjects.find(gs => gs.id === subId);
-                    return fSub ? `<span style="background:rgba(255, 179, 0, 0.1); color:var(--gold); padding:2px 6px; border-radius:4px; font-size:11px; margin:2px; display:inline-block;">${fSub.name}</span>` : '';
-                }).join('');
-            }
-            
-            let roleStr = s.role === 'doctor' ? '<i class="fas fa-user-tie" style="color:#10B981"></i> دكتور مادة' : '<i class="fas fa-user-graduate" style="color:#3B82F6"></i> معيد';
+        if (res.status === 401 || data.status === 'unauthorized' || !data.currentAdmin) {
+            document.getElementById('login-screen').style.display = 'flex';
+            document.getElementById('main-app').style.display = 'none';
+            return;
+        }
 
-            return `
-                <tr>
-                    <td style="font-weight:bold;">${s.name}</td>
-                    <td style="font-family:monospace; color:var(--text-muted);">${s.username}</td>
-                    <td style="line-height:1.8;">${allowedNames || 'بدون صلاحيات'}</td>
-                    <td>${roleStr}</td>
-                    <td>
-                        <div style="display:flex; justify-content:center; gap:5px; flex-wrap:wrap;">
-                            <button type="button" class="btn btn-gold" onclick="editStaff('${s.username}')"><i class="fas fa-edit"></i> تعديل</button>
-                            <button type="button" class="btn btn-red" onclick="deleteAction('manage_staff', '${s.username}', true)"><i class="fas fa-trash"></i> حذف</button>
-                        </div>
-                    </td>
-                </tr>
-            `;
-        }).join('');            
-    }
-    
-    if(globalSubjects.length > 0) {
-        if(!committeeFilter.sub || !globalSubjects.find(s=>s.id===committeeFilter.sub)) committeeFilter.sub = globalSubjects[0].id;
-        ['pending', 'resolved', 'spam'].forEach(tab => {
-            if(!compFilters[tab].sub || !globalSubjects.find(s=>s.id===compFilters[tab].sub)) compFilters[tab].sub = globalSubjects[0].id;
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('main-app').style.display = 'flex';
+
+        me = data.currentAdmin;
+        globalSubjects = data.subjects || [];
+        globalCommittees = data.committees || [];
+        fullComplaints = data.complaints || [];
+        globalStaff = data.staff || [];
+        globalStudents = data.students || [];
+        
+        const yearOrder = {
+            "الفرقة الأولى": 1,
+            "الفرقة الثانية": 2,
+            "الفرقة الثالثة": 3,
+            "الفرقة الرابعة": 4
+        };
+        
+        globalSubjects.sort((a, b) => {
+            const yearA = yearOrder[a.year] || 99;
+            const yearB = yearOrder[b.year] || 99;
+            if (yearA !== yearB) return yearA - yearB;
+            return (a.department || '').localeCompare(b.department || '', 'ar');
         });
-        saveAllFilters();
-    }
+        
+        let roleBadge = '';
+        if(me.role === 'super_admin') roleBadge = '<span style="color:var(--gold); font-size:12px; background:#000; padding:2px 8px; border-radius:10px;">الآدمن الرئيسي</span>';
+        else if(me.role === 'doctor') roleBadge = '<span style="color:#10B981; font-size:12px; background:#000; padding:2px 8px; border-radius:10px;">دكتور مادة</span>';
+        else roleBadge = '<span style="color:#3B82F6; font-size:12px; background:#000; padding:2px 8px; border-radius:10px;">معيد</span>';
+        
+        document.getElementById('welcome-text').innerHTML = `مرحباً، ${me.name} ${roleBadge}`;
 
-    renderSubjectsTable();
-    if(me.role === 'super_admin') renderStudentsTable();
-    buildSidebarMenus();
-    renderCommittees();
-    renderComplaints('pending');
-    renderComplaints('resolved');
-    renderComplaints('spam');
+        if(me.role !== 'super_admin') document.querySelectorAll('.super-only').forEach(e => e.style.display = 'none');
+        if(me.role === 'ta') document.querySelectorAll('.staff-manager-only').forEach(e => e.style.display = 'none');
 
-    if(!document.querySelector('.content-section.active')) {
-        document.getElementById('tab-pending').click();
+        if(me.role === 'super_admin' || me.role === 'doctor') {
+            let visibleStaff = globalStaff;
+            if (me.role === 'doctor') {
+                visibleStaff = globalStaff.filter(s => s.allowed_subjects && s.allowed_subjects.length > 0);
+            }
+
+            document.getElementById('staff-list').innerHTML = visibleStaff.map(s => {
+                let allowedNames = '-';
+                if (s.allowed_subjects && s.allowed_subjects.length > 0) {
+                    allowedNames = s.allowed_subjects.map(subId => {
+                        let fSub = globalSubjects.find(gs => gs.id === subId);
+                        return fSub ? `<span style="background:rgba(255, 179, 0, 0.1); color:var(--gold); padding:2px 6px; border-radius:4px; font-size:11px; margin:2px; display:inline-block;">${fSub.name}</span>` : '';
+                    }).join('');
+                }
+                
+                let roleStr = s.role === 'doctor' ? '<i class="fas fa-user-tie" style="color:#10B981"></i> دكتور مادة' : '<i class="fas fa-user-graduate" style="color:#3B82F6"></i> معيد';
+
+                return `
+                    <tr>
+                        <td style="font-weight:bold;">${s.name}</td>
+                        <td style="font-family:monospace; color:var(--text-muted);">${s.username}</td>
+                        <td style="line-height:1.8;">${allowedNames || 'بدون صلاحيات'}</td>
+                        <td>${roleStr}</td>
+                        <td>
+                            <div style="display:flex; justify-content:center; gap:5px; flex-wrap:wrap;">
+                                <button type="button" class="btn btn-gold" onclick="editStaff('${s.username}')"><i class="fas fa-edit"></i> تعديل</button>
+                                <button type="button" class="btn btn-red" onclick="deleteAction('manage_staff', '${s.username}', true)"><i class="fas fa-trash"></i> حذف</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');            
+        }
+        
+        if(globalSubjects.length > 0) {
+            if(!committeeFilter.sub || !globalSubjects.find(s=>s.id===committeeFilter.sub)) committeeFilter.sub = globalSubjects[0].id;
+            ['pending', 'resolved', 'spam'].forEach(tab => {
+                if(!compFilters[tab].sub || !globalSubjects.find(s=>s.id===compFilters[tab].sub)) compFilters[tab].sub = globalSubjects[0].id;
+            });
+            saveAllFilters();
+        }
+
+        renderSubjectsTable();
+        if(me.role === 'super_admin') renderStudentsTable();
+        buildSidebarMenus();
+        renderCommittees();
+        renderComplaints('pending');
+        renderComplaints('resolved');
+        renderComplaints('spam');
+
+        if(!document.querySelector('.content-section.active')) {
+            document.getElementById('tab-pending').click();
+        }
+    } catch(e) {
+        if(document.getElementById('loading-screen')) document.getElementById('loading-screen').style.display = 'none';
     }
 }
 
@@ -744,9 +758,7 @@ async function replyComplaint(tracking_id, student_name, existing_reply = '', ex
     let mediaStream = null;
     let removeExistingAudio = false;
 
-    const htmlForm = `
-        <textarea id="reply-text" class="swal2-textarea" placeholder="اكتب رسالتك للطالب هنا..." style="margin: 0; width: 100%; box-sizing: border-box;">${existing_reply}</textarea>
-        
+    let audioUI = `
         <div style="margin-top: 15px; text-align: right; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px; border: 1px solid var(--border);">
             
             <label style="color:var(--text-muted); font-size:13px; display:block; margin-bottom:8px;"><i class="fas fa-file-upload"></i> إرفاق ملف صوتي (اختياري):</label>
@@ -791,6 +803,11 @@ async function replyComplaint(tracking_id, student_name, existing_reply = '', ex
                 @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0; } 100% { opacity: 1; } }
             </style>
         </div>
+    `;
+
+    const htmlForm = `
+        <textarea id="reply-text" class="swal2-textarea" placeholder="اكتب رسالتك للطالب هنا..." style="margin: 0; width: 100%; box-sizing: border-box;">${existing_reply}</textarea>
+        ${audioUI}
     `;
 
     const { value: formValues } = await Swal.fire({ 
