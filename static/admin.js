@@ -20,7 +20,27 @@ let compFilters = JSON.parse(localStorage.getItem('admin_comp_filters')) || {
 };
 
 window.onload = async () => {
-    refreshData();
+    const savedAdminUser = localStorage.getItem('nexus_admin_user');
+    const savedAdminPass = localStorage.getItem('nexus_admin_pass');
+
+    if (savedAdminUser && savedAdminPass) {
+        document.getElementById('login-screen').style.display = 'none';
+        
+        Swal.fire({
+            title: 'جاري استعادة الجلسة...',
+            background: '#1a1f2c',
+            color: '#fff',
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            didOpen: () => Swal.showLoading()
+        });
+
+        document.getElementById('user').value = savedAdminUser;
+        document.getElementById('pass').value = savedAdminPass;
+        await handleLogin(true); 
+    } else {
+        refreshData();
+    }
 };
 
 function toggleAdminPasswordVisibility() {
@@ -57,6 +77,7 @@ async function changeMyPassword() {
         try {
             const data = await postAdminAction({action: 'change_my_password', new_password: formValues});
             if(data.status === 'success') {
+                localStorage.setItem('nexus_admin_pass', formValues); 
                 Swal.fire({...swalDark, icon: 'success', title: 'تم تغيير كلمة المرور بنجاح!', timer: 1500, showConfirmButton: false});
             } else {
                 Swal.fire({...swalDark, icon: 'error', text: data.message});
@@ -75,6 +96,7 @@ async function postAdminAction(bodyData) {
     if (res.status === 401 || data.status === 'unauthorized') {
         document.getElementById('login-screen').style.display = 'flex';
         document.getElementById('main-app').style.display = 'none';
+        Swal.close();
         throw new Error("Unauthorized");
     }
     return data;
@@ -87,13 +109,16 @@ function toggleSidebar() {
     overlay.style.display = sidebar.classList.contains('open') ? 'block' : 'none';
 }
 
-async function handleLogin() {
+async function handleLogin(isSilent = false) {
     const userVal = document.getElementById('user').value.trim();
     const passVal = document.getElementById('pass').value.trim();
+    
     if(!userVal || !passVal) {
-        return Swal.fire({...swalDark, icon: 'warning', text: 'الرجاء إدخال اسم المستخدم وكلمة المرور'});
+        if (!isSilent) Swal.fire({...swalDark, icon: 'warning', text: 'الرجاء إدخال اسم المستخدم وكلمة المرور'});
+        return;
     }
-    Swal.fire({title: 'جاري التحقق...', background: '#1a1f2c', color: '#fff', didOpen: () => Swal.showLoading()});
+    
+    if (!isSilent) Swal.fire({title: 'جاري التحقق...', background: '#1a1f2c', color: '#fff', allowOutsideClick: false, showConfirmButton: false, didOpen: () => Swal.showLoading()});
     
     try {
         const res = await fetch('/secure-auth-gateway-2026-x9v2-pl7q-a84m', { 
@@ -104,19 +129,53 @@ async function handleLogin() {
         const data = await res.json();
         
         if(data.status === 'success') {
-            sessionStorage.removeItem('has_recorded_audio');
-            Swal.close();
+            localStorage.setItem('nexus_admin_user', userVal);
+            localStorage.setItem('nexus_admin_pass', passVal);
+            
             document.getElementById('user').value = '';
             document.getElementById('pass').value = '';
-            refreshData(); 
+            
+            await refreshData(); 
+            Swal.close(); 
         } else {
-            document.getElementById('pass').value = ''; 
-            Swal.fire({...swalDark, icon: 'error', text: data.message});
+            if (isSilent) {
+                localStorage.removeItem('nexus_admin_user');
+                localStorage.removeItem('nexus_admin_pass');
+                document.getElementById('login-screen').style.display = 'flex';
+                Swal.close();
+            } else {
+                document.getElementById('pass').value = ''; 
+                Swal.fire({...swalDark, icon: 'error', text: data.message});
+            }
         }
     } catch(e) {
-        document.getElementById('pass').value = ''; 
-        Swal.fire({...swalDark, icon: 'error', text: 'حدث خطأ في الاتصال أو تم حظرك مؤقتاً بسبب كثرة المحاولات.'});
+        if (isSilent) {
+            document.getElementById('login-screen').style.display = 'flex';
+            Swal.close();
+        } else {
+            document.getElementById('pass').value = ''; 
+            Swal.fire({...swalDark, icon: 'error', text: 'حدث خطأ في الاتصال أو تم حظرك مؤقتاً بسبب كثرة المحاولات.'});
+        }
     }
+}
+
+function logoutAdmin() {
+    Swal.fire({
+        ...swalDark,
+        title: 'تسجيل الخروج',
+        text: 'هل أنت متأكد من تسجيل الخروج من لوحة التحكم؟',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#EF4444',
+        confirmButtonText: 'نعم، خروج',
+        cancelButtonText: 'إلغاء'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            localStorage.removeItem('nexus_admin_user');
+            localStorage.removeItem('nexus_admin_pass');
+            window.location.href = '/logout-gateway-vip-x9v2-pL7q-2026';
+        }
+    });
 }
 
 async function refreshData() {
@@ -685,73 +744,53 @@ async function replyComplaint(tracking_id, student_name, existing_reply = '', ex
     let mediaStream = null;
     let removeExistingAudio = false;
 
-    const hasUsedAudio = sessionStorage.getItem('has_recorded_audio') === 'true';
-    let audioUI = '';
-
-    if (hasUsedAudio && !existing_audio) {
-        audioUI = `
-            <div style="margin-top: 15px; text-align: right; background: rgba(239,68,68,0.1); padding: 15px; border-radius: 8px; border: 1px solid rgba(239,68,68,0.3);">
-                <p style="color:#EF4444; font-size:13px; margin:0; line-height:1.5;"><i class="fas fa-lock"></i> لقد قمت بإرفاق تسجيل صوتي في شكوى أخرى خلال هذه الجلسة. النظام يسمح بتسجيل واحد فقط لكل جلسة للحفاظ على الاستقرار. يرجى <b>تسجيل الخروج والدخول مجدداً</b> لتتمكن من التسجيل مرة أخرى.</p>
-            </div>
-        `;
-    } else {
-        let recordUploadHtml = '';
-        if (hasUsedAudio) {
-            recordUploadHtml = `<p style="color:#EF4444; font-size:12px; margin-bottom:10px;"><i class="fas fa-lock"></i> لقد استنفدت محاولتك في التسجيل خلال هذه الجلسة. يمكنك فقط الاحتفاظ بالتسجيل القديم أو حذفه.</p>`;
-        } else {
-            recordUploadHtml = `
-                <label style="color:var(--text-muted); font-size:13px; display:block; margin-bottom:8px;"><i class="fas fa-file-upload"></i> إرفاق ملف صوتي (اختياري):</label>
-                
-                <div style="display:flex; gap:10px; align-items:center; margin-bottom: 15px;">
-                    <input type="file" id="reply-audio" accept="audio/*" class="login-input" style="padding: 10px; margin: 0; flex: 1;">
-                    <button type="button" id="clear-file-btn" class="btn btn-red" style="padding: 10px; border-radius: 8px; display:none;" title="إلغاء الملف المرفوع"><i class="fas fa-times"></i></button>
-                </div>
-
-                <hr style="border: 0; border-top: 1px dashed var(--border); margin: 15px 0;">
-
-                <label style="color:var(--gold); font-size:13px; display:block; margin-bottom:10px;"><i class="fas fa-microphone-alt"></i> أو تسجيل صوتي مباشر الآن:</label>
-                
-                <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-                    <button type="button" id="start-record-btn" class="btn btn-blue" style="padding: 8px 15px; font-size: 13px; border-radius: 8px;">
-                        <i class="fas fa-microphone"></i> بدء التسجيل
-                    </button>
-                    
-                    <button type="button" id="stop-record-btn" class="btn btn-red" style="padding: 8px 15px; font-size: 13px; border-radius: 8px; display: none;">
-                        <i class="fas fa-stop-circle"></i> إيقاف
-                    </button>
-                    
-                    <span id="record-timer" style="color: #EF4444; font-family: monospace; font-size: 16px; font-weight: bold; display: none; background: rgba(239, 68, 68, 0.1); padding: 4px 10px; border-radius: 6px;"><i class="fas fa-circle" style="font-size: 10px; animation: blink 1s infinite;"></i> 00:00</span>
-                </div>
-
-                <div id="audio-preview-container" style="margin-top: 15px; display: none; background: #1F2937; padding: 10px; border-radius: 8px; border: 1px solid #374151;">
-                    <p style="color:#10B981; font-size:12px; margin-bottom:8px;"><i class="fas fa-check-circle"></i> تم تسجيل المقطع بنجاح:</p>
-                    <audio id="audio-preview" controls style="width: 100%; height: 35px;"></audio>
-                    <button type="button" id="clear-record-btn" style="background: none; border: none; color: #EF4444; font-size: 12px; margin-top: 10px; cursor: pointer; text-decoration: underline;">
-                        <i class="fas fa-trash"></i> حذف التسجيل وإعادة المحاولة
-                    </button>
-                </div>
-            `;
-        }
-
-        audioUI = `
-            <div style="margin-top: 15px; text-align: right; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px; border: 1px solid var(--border);">
-                ${recordUploadHtml}
-                ${existing_audio ? `
-                <div id="existing-audio-container" style="margin-top:15px; padding:10px; background:rgba(16,185,129,0.1); border-radius:8px; border:1px solid rgba(16,185,129,0.3); display:flex; justify-content:space-between; align-items:center;">
-                    <p style="color:#10B981; font-size:12px; margin:0;"><i class="fas fa-check-circle"></i> يوجد تسجيل صوتي مرفق مسبقاً</p>
-                    <button type="button" id="remove-existing-btn" class="btn btn-red" style="padding:4px 8px; font-size:11px; border-radius:6px;"><i class="fas fa-trash"></i> مسح التسجيل</button>
-                </div>
-                ` : ''}
-                <style>
-                    @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0; } 100% { opacity: 1; } }
-                </style>
-            </div>
-        `;
-    }
-
     const htmlForm = `
         <textarea id="reply-text" class="swal2-textarea" placeholder="اكتب رسالتك للطالب هنا..." style="margin: 0; width: 100%; box-sizing: border-box;">${existing_reply}</textarea>
-        ${audioUI}
+        
+        <div style="margin-top: 15px; text-align: right; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px; border: 1px solid var(--border);">
+            
+            <label style="color:var(--text-muted); font-size:13px; display:block; margin-bottom:8px;"><i class="fas fa-file-upload"></i> إرفاق ملف صوتي (اختياري):</label>
+            
+            <div style="display:flex; gap:10px; align-items:center; margin-bottom: 15px;">
+                <input type="file" id="reply-audio" accept="audio/*" class="login-input" style="padding: 10px; margin: 0; flex: 1;">
+                <button type="button" id="clear-file-btn" class="btn btn-red" style="padding: 10px; border-radius: 8px; display:none;" title="إلغاء الملف المرفوع"><i class="fas fa-times"></i></button>
+            </div>
+
+            <hr style="border: 0; border-top: 1px dashed var(--border); margin: 15px 0;">
+
+            <label style="color:var(--gold); font-size:13px; display:block; margin-bottom:10px;"><i class="fas fa-microphone-alt"></i> أو تسجيل صوتي مباشر الآن:</label>
+            
+            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                <button type="button" id="start-record-btn" class="btn btn-blue" style="padding: 8px 15px; font-size: 13px; border-radius: 8px;">
+                    <i class="fas fa-microphone"></i> بدء التسجيل
+                </button>
+                
+                <button type="button" id="stop-record-btn" class="btn btn-red" style="padding: 8px 15px; font-size: 13px; border-radius: 8px; display: none;">
+                    <i class="fas fa-stop-circle"></i> إيقاف
+                </button>
+                
+                <span id="record-timer" style="color: #EF4444; font-family: monospace; font-size: 16px; font-weight: bold; display: none; background: rgba(239, 68, 68, 0.1); padding: 4px 10px; border-radius: 6px;"><i class="fas fa-circle" style="font-size: 10px; animation: blink 1s infinite;"></i> 00:00</span>
+            </div>
+
+            <div id="audio-preview-container" style="margin-top: 15px; display: none; background: #1F2937; padding: 10px; border-radius: 8px; border: 1px solid #374151;">
+                <p style="color:#10B981; font-size:12px; margin-bottom:8px;"><i class="fas fa-check-circle"></i> تم تسجيل المقطع بنجاح:</p>
+                <audio id="audio-preview" controls style="width: 100%; height: 35px;"></audio>
+                <button type="button" id="clear-record-btn" style="background: none; border: none; color: #EF4444; font-size: 12px; margin-top: 10px; cursor: pointer; text-decoration: underline;">
+                    <i class="fas fa-trash"></i> حذف التسجيل وإعادة المحاولة
+                </button>
+            </div>
+
+            ${existing_audio ? `
+            <div id="existing-audio-container" style="margin-top:15px; padding:10px; background:rgba(16,185,129,0.1); border-radius:8px; border:1px solid rgba(16,185,129,0.3); display:flex; justify-content:space-between; align-items:center;">
+                <p style="color:#10B981; font-size:12px; margin:0;"><i class="fas fa-check-circle"></i> يوجد تسجيل صوتي مرفق مسبقاً</p>
+                <button type="button" id="remove-existing-btn" class="btn btn-red" style="padding:4px 8px; font-size:11px; border-radius:6px;"><i class="fas fa-trash"></i> مسح التسجيل</button>
+            </div>
+            ` : ''}
+            
+            <style>
+                @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0; } 100% { opacity: 1; } }
+            </style>
+        </div>
     `;
 
     const { value: formValues } = await Swal.fire({ 
@@ -904,10 +943,6 @@ async function replyComplaint(tracking_id, student_name, existing_reply = '', ex
                 audio_record: formValues.audio
             }); 
             
-            if(formValues.audio && formValues.audio !== existing_audio) {
-                sessionStorage.setItem('has_recorded_audio', 'true');
-            }
-
             await refreshData(); 
             Swal.fire({...swalDark, icon: 'success', title: 'تم الإرسال بنجاح!', timer: 1500, showConfirmButton: false}); 
         } catch(e) {}
