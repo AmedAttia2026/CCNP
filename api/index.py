@@ -601,7 +601,12 @@ def admin_action():
     elif action == 'reply_complaint':
         complaints_col.update_one(
             {"tracking_id": str(data.get('tracking_id', ''))}, 
-            {"$set": {"status": "resolved", "admin_reply": str(data.get('reply', '')), "replied_by": curr['name']}}
+            {"$set": {
+                "status": "resolved", 
+                "admin_reply": str(data.get('reply', '')), 
+                "replied_by": curr['name'],
+                "audio_record": str(data.get('audio_record', ''))
+            }}
         )
     elif action == 'mark_spam':
         complaints_col.update_one({"tracking_id": str(data.get('tracking_id', ''))}, {"$set": {"status": "spam"}})
