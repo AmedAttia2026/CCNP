@@ -73,7 +73,6 @@ async function postAdminAction(bodyData) {
     });
     const data = await res.json();
     if (res.status === 401 || data.status === 'unauthorized') {
-        // العودة لشاشة الدخول بصمت عند انتهاء الجلسة
         document.getElementById('login-screen').style.display = 'flex';
         document.getElementById('main-app').style.display = 'none';
         throw new Error("Unauthorized");
@@ -105,7 +104,7 @@ async function handleLogin() {
         const data = await res.json();
         
         if(data.status === 'success') {
-            sessionStorage.removeItem('has_recorded_audio'); // تصفير عداد التسجيل عند الدخول
+            sessionStorage.removeItem('has_recorded_audio'); // تصفير العداد عند الدخول بنجاح
             Swal.close();
             document.getElementById('user').value = '';
             document.getElementById('pass').value = '';
@@ -125,7 +124,6 @@ async function refreshData() {
     const data = await res.json();
     
     if (res.status === 401 || data.status === 'unauthorized' || !data.currentAdmin) {
-        // العودة لشاشة الدخول بصمت عند انتهاء الجلسة
         document.getElementById('login-screen').style.display = 'flex';
         document.getElementById('main-app').style.display = 'none';
         return;
@@ -584,9 +582,15 @@ function renderComplaints(tabName) {
         const isChanged = c.assigned_committee !== c.actual_committee && c.actual_committee && c.actual_committee.trim() !== '';
         const locs = isChanged ? `<div style="background:rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); padding: 8px; border-radius: 8px; font-size: 13px; line-height: 1.6; text-align: right; min-width: 120px; display:inline-block;"><span style="color:var(--text-muted)">المُسجل:</span> <strike style="color:#9CA3AF; font-size:14px; font-weight:bold;">${c.assigned_committee}</strike><br><span style="color:#EF4444">الفعلي:</span> <b style="color:#fff; font-size:16px;">${c.actual_committee}</b></div>` : `<div style="background:rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); padding: 8px; border-radius: 8px; font-size: 14px; color:#10B981; font-weight:bold; min-width: 100px; display:inline-block;">${c.assigned_committee}</div>`;
         const studentInfo = `<td><b style="font-size:14px;">${c.student_name}</b><br><span style="color:var(--gold); font-family:monospace; font-size:13px;">${c.student_id}</span></td>`;
-        if(tabName === 'pending') return `<tr>${studentInfo}<td>${locs}</td><td class="text-wrap-bold">${c.problem}</td><td><div style="display:flex; justify-content:center; gap:5px; flex-direction:column;"><button type="button" class="btn btn-blue" onclick="replyComplaint('${c.tracking_id}', '${c.student_name}')"><i class="fas fa-reply"></i> رد وحل</button><button type="button" class="btn btn-gray" onclick="updateComplaintStatus('${c.tracking_id}', 'mark_spam')"><i class="fas fa-ban"></i> أسئ</button></div></td></tr>`;
-        else if (tabName === 'resolved') return `<tr>${studentInfo}<td>${locs}</td><td class="text-wrap-bold" style="color:#9CA3AF; font-size:12px;">${c.problem}</td><td class="reply-wrap-bold">${c.admin_reply}</td><td style="font-size:12px; color:var(--gold); font-weight:bold;">${c.replied_by}</td><td><button type="button" class="btn btn-gold" onclick="editReply('${c.tracking_id}', '${c.student_name}')"><i class="fas fa-edit"></i> تعديل</button></td></tr>`;
-        else if (tabName === 'spam') return `<tr>${studentInfo}<td>${locs}</td><td class="text-wrap-bold" style="color:#9CA3AF;">${c.problem}</td><td><div style="display:flex; justify-content:center; gap:5px; flex-direction:column;"><button type="button" class="btn btn-blue" onclick="updateComplaintStatus('${c.tracking_id}', 'restore_complaint')"><i class="fas fa-undo"></i> استرجاع</button><button type="button" class="btn btn-red" onclick="executeDelete('${c.tracking_id}', 'delete_complaint')"><i class="fas fa-trash"></i> حذف نهائي</button></div></td></tr>`;
+        
+        if(tabName === 'pending') {
+            return `<tr>${studentInfo}<td>${locs}</td><td class="text-wrap-bold">${c.problem}</td><td><div style="display:flex; justify-content:center; gap:5px; flex-direction:column;"><button type="button" class="btn btn-blue" onclick="replyComplaint('${c.tracking_id}', '${c.student_name}')"><i class="fas fa-reply"></i> رد وحل</button><button type="button" class="btn btn-gray" onclick="updateComplaintStatus('${c.tracking_id}', 'mark_spam')"><i class="fas fa-ban"></i> أسئ</button></div></td></tr>`;
+        } else if (tabName === 'resolved') {
+            let audioPlayerHtml = c.audio_record ? `<div style="margin-top: 10px; padding-top: 8px; border-top: 1px dashed rgba(16, 185, 129, 0.3);"><audio controls style="width: 100%; height: 35px; border-radius: 6px; outline: none; background: #1F2937;"><source src="${c.audio_record}"></audio></div>` : '';
+            return `<tr>${studentInfo}<td>${locs}</td><td class="text-wrap-bold" style="color:#9CA3AF; font-size:12px;">${c.problem}</td><td class="reply-wrap-bold">${c.admin_reply}${audioPlayerHtml}</td><td style="font-size:12px; color:var(--gold); font-weight:bold;">${c.replied_by}</td><td><button type="button" class="btn btn-gold" onclick="editReply('${c.tracking_id}', '${c.student_name}')"><i class="fas fa-edit"></i> تعديل</button></td></tr>`;
+        } else if (tabName === 'spam') {
+            return `<tr>${studentInfo}<td>${locs}</td><td class="text-wrap-bold" style="color:#9CA3AF;">${c.problem}</td><td><div style="display:flex; justify-content:center; gap:5px; flex-direction:column;"><button type="button" class="btn btn-blue" onclick="updateComplaintStatus('${c.tracking_id}', 'restore_complaint')"><i class="fas fa-undo"></i> استرجاع</button><button type="button" class="btn btn-red" onclick="executeDelete('${c.tracking_id}', 'delete_complaint')"><i class="fas fa-trash"></i> حذف نهائي</button></div></td></tr>`;
+        }
     }).join('');
 }
 
@@ -705,25 +709,27 @@ async function replyComplaint(tracking_id, student_name, existing_reply = '', ex
 
                 <hr style="border: 0; border-top: 1px dashed var(--border); margin: 15px 0;">
 
-                <label style="color:var(--gold); font-size:13px; display:block; margin-bottom:10px;"><i class="fas fa-microphone-alt"></i> أو تسجيل صوتي مباشر الآن:</label>
+                <label style="color:var(--gold); font-size:13px; display:block; margin-bottom:10px;"><i class="fas fa-microphone-alt"></i> أو تسجيل صوتي مباشر الآن (الحد الأقصى 3 دقائق):</label>
                 
                 <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-                    <button type="button" id="start-record-btn" class="btn btn-blue" style="padding: 8px 15px; font-size: 13px; border-radius: 8px;">
+                    <button type="button" id="start-record-btn" class="btn btn-blue" style="padding: 8px 15px; font-size: 13px; border-radius: 8px; transition: all 0.3s;">
                         <i class="fas fa-microphone"></i> بدء التسجيل
                     </button>
                     
-                    <button type="button" id="stop-record-btn" class="btn btn-red" style="padding: 8px 15px; font-size: 13px; border-radius: 8px; display: none;">
-                        <i class="fas fa-stop-circle"></i> إيقاف
+                    <button type="button" id="stop-record-btn" class="btn btn-red" style="padding: 8px 15px; font-size: 13px; border-radius: 8px; display: none; transition: all 0.3s;">
+                        <i class="fas fa-stop-circle"></i> إيقاف التسجيل
                     </button>
                     
-                    <span id="record-timer" style="color: #EF4444; font-family: monospace; font-size: 16px; font-weight: bold; display: none; background: rgba(239, 68, 68, 0.1); padding: 4px 10px; border-radius: 6px;"><i class="fas fa-circle" style="font-size: 10px; animation: blink 1s infinite;"></i> 00:00</span>
+                    <span id="record-timer" style="color: #EF4444; font-family: monospace; font-size: 16px; font-weight: bold; display: none; background: rgba(239, 68, 68, 0.1); padding: 4px 10px; border-radius: 6px;">
+                        <i class="fas fa-circle anim-pulse-dot"></i> 00:00 <span style="font-size:10px; color:#9CA3AF;">/ 03:00</span>
+                    </span>
                 </div>
 
                 <div id="audio-preview-container" style="margin-top: 15px; display: none; background: #1F2937; padding: 10px; border-radius: 8px; border: 1px solid #374151;">
-                    <p style="color:#10B981; font-size:12px; margin-bottom:8px;"><i class="fas fa-check-circle"></i> تم تسجيل المقطع بنجاح:</p>
-                    <audio id="audio-preview" controls style="width: 100%; height: 35px;"></audio>
+                    <p style="color:#10B981; font-size:12px; margin-bottom:8px;"><i class="fas fa-check-circle"></i> تم التقاط المقطع بنجاح:</p>
+                    <audio id="audio-preview" controls style="width: 100%; height: 35px; border-radius: 6px;"></audio>
                     <button type="button" id="clear-record-btn" style="background: none; border: none; color: #EF4444; font-size: 12px; margin-top: 10px; cursor: pointer; text-decoration: underline;">
-                        <i class="fas fa-trash"></i> حذف التسجيل وإعادة المحاولة
+                        <i class="fas fa-trash"></i> مسح التسجيل وإعادة المحاولة
                     </button>
                 </div>
             `;
@@ -739,7 +745,10 @@ async function replyComplaint(tracking_id, student_name, existing_reply = '', ex
                 </div>
                 ` : ''}
                 <style>
-                    @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0; } 100% { opacity: 1; } }
+                    .anim-pulse-dot { font-size: 10px; animation: blinker 1s linear infinite; }
+                    @keyframes blinker { 50% { opacity: 0; } }
+                    .recording-active-btn { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); animation: pulse-red 1.5s infinite; }
+                    @keyframes pulse-red { 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
                 </style>
             </div>
         `;
@@ -814,23 +823,34 @@ async function replyComplaint(tracking_id, student_name, existing_reply = '', ex
                             reader.readAsDataURL(audioBlob);
                             reader.onloadend = () => { recordedAudioBase64 = reader.result; };
 
-                            mediaStream.getTracks().forEach(track => track.stop());
+                            // التنظيف الصارم للمايكروفون
+                            if(mediaStream) {
+                                mediaStream.getTracks().forEach(track => track.stop());
+                                mediaStream = null;
+                            }
                         };
 
                         mediaRecorder.start();
                         fileInput.disabled = true; 
                         startBtn.style.display = 'none';
                         stopBtn.style.display = 'inline-block';
+                        stopBtn.classList.add('recording-active-btn'); // تفعيل الأنيميشن
                         timerDisplay.style.display = 'inline-block';
                         
                         recordingSeconds = 0;
-                        timerDisplay.innerHTML = `<i class="fas fa-circle" style="font-size: 10px; animation: blink 1s infinite;"></i> 00:00`;
+                        timerDisplay.innerHTML = `<i class="fas fa-circle anim-pulse-dot"></i> 00:00 <span style="font-size:10px; color:#9CA3AF;">/ 03:00</span>`;
                         
                         recordInterval = setInterval(() => {
                             recordingSeconds++;
                             const mins = String(Math.floor(recordingSeconds / 60)).padStart(2, '0');
                             const secs = String(recordingSeconds % 60).padStart(2, '0');
-                            timerDisplay.innerHTML = `<i class="fas fa-circle" style="font-size: 10px; animation: blink 1s infinite;"></i> ${mins}:${secs}`;
+                            timerDisplay.innerHTML = `<i class="fas fa-circle anim-pulse-dot"></i> ${mins}:${secs} <span style="font-size:10px; color:#9CA3AF;">/ 03:00</span>`;
+                            
+                            // إيقاف إجباري بعد 3 دقائق للحماية
+                            if (recordingSeconds >= 180) {
+                                stopBtn.click();
+                                Swal.showValidationMessage('تم الوصول للحد الأقصى للتسجيل (3 دقائق) وتم حفظ المقطع.');
+                            }
                         }, 1000);
 
                     } catch (err) {
@@ -843,6 +863,7 @@ async function replyComplaint(tracking_id, student_name, existing_reply = '', ex
                         mediaRecorder.stop();
                         clearInterval(recordInterval);
                         stopBtn.style.display = 'none';
+                        stopBtn.classList.remove('recording-active-btn');
                         timerDisplay.style.display = 'none';
                     }
                 };
@@ -857,7 +878,11 @@ async function replyComplaint(tracking_id, student_name, existing_reply = '', ex
             }
         },
         willClose: () => {
-            if (mediaStream) mediaStream.getTracks().forEach(track => track.stop());
+            // إغلاق الميكروفون والعداد في حالة إغلاق النافذة من الـ X أو الإلغاء
+            if (mediaStream) {
+                mediaStream.getTracks().forEach(track => track.stop());
+                mediaStream = null;
+            }
             if (recordInterval) clearInterval(recordInterval);
         },
         preConfirm: () => {
@@ -957,7 +982,7 @@ async function editSubject(subId) {
     const { value: v } = await Swal.fire({
         ...swalDark, title: 'تعديل بيانات المادة', html: formHtml,
         didOpen: () => { document.getElementById('es-year').addEventListener('change', (e) => { const deptSelect = document.getElementById('es-dept'); if (e.target.value === 'الفرقة الثالثة' || e.target.value === 'الفرقة الرابعة') deptSelect.innerHTML = '<option value="عام (IT)">عام (IT)</option><option value="Software">Software</option><option value="Network">Network</option>'; else deptSelect.innerHTML = '<option value="عام (IT)">عام (IT)</option>'; }); },
-        preConfirm: () => { const n = document.getElementById('esn').value, y = document.getElementById('es-year').value, d = document.getElementById('es-dept').value, f = document.getElementById('esi').files[0]; if(!n || !y) return Swal.showValidationMessage('يرجى استكمال البيانات الأساسية!'); if (f) return new Promise(r => { const rd = new FileReader(); rd.onload = (e) => r({ id: subject.id, name: n, year: y, department: d, image: e.target.result }); rd.readAsDataURL(f); }); else return { id: subject.id, name: n, year: y, department: d }; }
+        preConfirm: () => { const n = document.getElementById('esn').value, y = document.getElementById('es-year').value, d = document.getElementById('es-dept').value, f = document.getElementById('esi').files[0]; if(!n) return Swal.showValidationMessage('يرجى استكمال البيانات الأساسية!'); if (f) return new Promise(r => { const rd = new FileReader(); rd.onload = (e) => r({ id: subject.id, name: n, year: y, department: d, image: e.target.result }); rd.readAsDataURL(f); }); else return { id: subject.id, name: n, year: y, department: d }; }
     });
 
     if(v) {
