@@ -13,7 +13,8 @@ load_dotenv()
 
 app = Flask(__name__, template_folder='../templates', static_folder='../static', static_url_path='/static')
 
-app.secret_key = os.environ.get("SECRET_KEY", os.urandom(32).hex())
+# هنا التعديل: تثبيت مفتاح التشفير لعدم فقدان الجلسة عند إعادة تشغيل السيرفر
+app.secret_key = os.environ.get("SECRET_KEY", "Nexus_Super_Secret_Key_2026_Fixed")
 
 limiter = Limiter(
     get_remote_address,
@@ -62,7 +63,6 @@ def set_security_headers(response):
     response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
     return response
 
-# --- معالجة خطأ تجاوز الحد المسموح (Rate Limit Exceeded) ---
 @app.errorhandler(429)
 def ratelimit_handler(e):
     if request.path.startswith('/api/') or request.path.startswith('/secure-auth'):
@@ -96,7 +96,6 @@ def index():
         return """<!doctype html><html lang=ar dir=rtl><title>النظام مغلق</title><h1 style="text-align:center; margin-top:50px;">النظام مغلق حالياً</h1></html>""", 403
     return render_template('index.html')
 
-# -- تطبيق 5 محاولات في 30 ثانية فقط للطالب --
 @app.route('/api/student-login', methods=['POST'])
 @limiter.limit("5 per 30 seconds") 
 def student_login():
@@ -256,7 +255,6 @@ def submit_complaint():
     })
     return jsonify({"status": "success"})
 
-# -- تطبيق 5 محاولات في 30 ثانية فقط للآدمن أيضاً --
 @app.route('/secure-auth-gateway-2026-x9v2-pl7q-a84m', methods=['GET', 'POST'])
 @limiter.limit("5 per 30 seconds") 
 def admin_login():
