@@ -73,10 +73,8 @@ async function postAdminAction(bodyData) {
     });
     const data = await res.json();
     if (res.status === 401 || data.status === 'unauthorized') {
-        Swal.fire({icon: 'error', title: 'تنبيه أمني', text: data.message || 'انتهت الجلسة، يرجى تسجيل الدخول مجدداً.', background:'#1a1f2c', color:'#fff'}).then(() => {
-            document.getElementById('login-screen').style.display = 'flex';
-            document.getElementById('main-app').style.display = 'none';
-        });
+        document.getElementById('login-screen').style.display = 'flex';
+        document.getElementById('main-app').style.display = 'none';
         throw new Error("Unauthorized");
     }
     return data;
@@ -127,9 +125,6 @@ async function refreshData() {
     if (res.status === 401 || data.status === 'unauthorized' || !data.currentAdmin) {
         document.getElementById('login-screen').style.display = 'flex';
         document.getElementById('main-app').style.display = 'none';
-        if (data.message) {
-            Swal.fire({icon: 'error', title: 'تنبيه أمني', text: data.message, background:'#1a1f2c', color:'#fff'});
-        }
         return;
     }
 
@@ -785,7 +780,6 @@ async function replyComplaint(tracking_id, student_name, existing_reply = '', ex
                     mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
 
                     mediaRecorder.onstop = () => {
-                        // إضافة الصيغة بشكل صريح ليعمل لدى الطالب
                         const audioType = mediaRecorder.mimeType || 'audio/webm';
                         const audioBlob = new Blob(audioChunks, { type: audioType }); 
                         const audioUrl = URL.createObjectURL(audioBlob);
@@ -846,8 +840,8 @@ async function replyComplaint(tracking_id, student_name, existing_reply = '', ex
             const audioFile = document.getElementById('reply-audio').files[0];
             
             let finalAudio = existing_audio;
-            if (removeExistingAudio) finalAudio = ''; // تم حذف الصوت القديم
-            if (recordedAudioBase64) finalAudio = recordedAudioBase64; // تم تسجيل مقطع جديد
+            if (removeExistingAudio) finalAudio = ''; 
+            if (recordedAudioBase64) finalAudio = recordedAudioBase64; 
             
             if (!replyText.trim() && !audioFile && !finalAudio) {
                 Swal.showValidationMessage('يجب كتابة رد نصي أو إرفاق/تسجيل ملف صوتي!');
