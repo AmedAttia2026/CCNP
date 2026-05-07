@@ -79,8 +79,9 @@ table { width: 100%; border-collapse: collapse; min-width: 850px;}
 table th { padding: 12px; text-align: center; border-bottom: 2px solid var(--border); color: var(--text-muted); background: rgba(0,0,0,0.2); font-size: 13px;}
 table td { padding: 12px; text-align: center; border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: middle;}
 
-.text-wrap-bold { text-align: right; max-width: 280px; white-space: normal; word-wrap: break-word; font-weight: 800; color: #ffffff; line-height: 1.6; font-size: 14px; padding: 15px !important; }
-.reply-wrap-bold { text-align: right; max-width: 250px; white-space: normal; word-wrap: break-word; font-weight: 900; color: #10B981; line-height: 1.6; font-size: 14px; padding: 15px !important; }
+/* تعديل عرض الخلايا لتسمح بظهور الصوت */
+.text-wrap-bold { text-align: right; min-width: 200px; max-width: 300px; white-space: normal; word-wrap: break-word; font-weight: 800; color: #ffffff; line-height: 1.6; font-size: 14px; padding: 15px !important; }
+.reply-wrap-bold { text-align: right; min-width: 260px; max-width: 380px; white-space: normal; word-wrap: break-word; font-weight: 900; color: #10B981; line-height: 1.6; font-size: 14px; padding: 15px !important; }
 
 .btn { padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; border: none; color: #fff; display: inline-flex; gap: 5px; align-items: center; font-size:12px; transition:0.3s; white-space: nowrap;}
 .btn-gold { background: var(--gold); color: #000; } .btn-green { background: #10B981; } .btn-red { background: rgba(239, 68, 68, 0.2); color: #EF4444; border: 1px solid #EF4444;} .btn-blue { background: rgba(59, 130, 246, 0.2); color:#3B82F6; border: 1px solid #3B82F6;} .btn-gray { background: rgba(156, 163, 175, 0.2); color:#9CA3AF; border: 1px solid #9CA3AF;}
@@ -167,6 +168,34 @@ footer { text-align: center; padding: 20px 15px; background: #0a0e17; border-top
 .loader { border: 4px solid rgba(255, 179, 0, 0.2); border-top: 4px solid var(--gold); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin-bottom: 15px;}
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
+/* --- Custom Audio Player Styling --- */
+audio {
+    width: 100%;
+    min-width: 240px;
+    height: 45px;
+    border-radius: 8px;
+    outline: none;
+    background-color: #1F2937;
+}
+audio::-webkit-media-controls-enclosure {
+    border-radius: 8px;
+    background-color: #1F2937;
+}
+audio::-webkit-media-controls-panel {
+    background-color: #1F2937;
+    border-radius: 8px;
+}
+audio::-webkit-media-controls-play-button,
+audio::-webkit-media-controls-mute-button {
+    background-color: var(--gold);
+    border-radius: 50%;
+}
+audio::-webkit-media-controls-current-time-display,
+audio::-webkit-media-controls-time-remaining-display {
+    color: #fff;
+    font-weight: bold;
+}
+
 /* =========================================================
    📱 Responsive Media Queries
    ========================================================= */
@@ -213,20 +242,4 @@ footer { text-align: center; padding: 20px 15px; background: #0a0e17; border-top
 @media (max-width: 350px) {
     .logo span { display: none; }
     .btn-outline, .btn-danger-outline { font-size: 10px; padding: 5px 6px; }
-}
-audio {
-    background-color: #1F2937;
-    border-radius: 8px;
-}
-audio::-webkit-media-controls-panel {
-    background-color: #1F2937;
-}
-audio::-webkit-media-controls-play-button,
-audio::-webkit-media-controls-mute-button {
-    background-color: var(--gold);
-    border-radius: 50%;
-}
-audio::-webkit-media-controls-current-time-display,
-audio::-webkit-media-controls-time-remaining-display {
-    color: #fff;
 }
